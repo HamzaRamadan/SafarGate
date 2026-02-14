@@ -1,0 +1,712 @@
+{
+  "entities": {
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Represents a user profile in the system.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user profile."
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The first name of the user."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The last name of the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the user.",
+          "format": "email"
+        },
+        "photoURL": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL of the user's profile picture."
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "The phone number of the user, preferably in E.164 format.",
+          "pattern": "^\\\\+[1-9]\\\\d{1,14}$"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["traveler", "carrier", "admin", "owner"],
+          "description": "The user's role in the system."
+        },
+        "isDeactivated": { "type": "boolean", "description": "If true, the carrier's account is temporarily frozen." },
+        "ratingStats": {
+          "type": "object",
+          "description": "Statistics related to a carrier's performance and rating.",
+          "properties": {
+            "average": {
+              "type": "number",
+              "description": "The carrier's average rating, from 0 to 5.",
+              "minimum": 0,
+              "maximum": 5
+            },
+            "count": {
+              "type": "number",
+              "description": "The total number of ratings a carrier has received."
+            },
+            "tier": {
+              "type": "string",
+              "enum": ["BRONZE", "SILVER", "GOLD", "PLATINUM"],
+              "description": "The honorific tier of the carrier based on their rating."
+            }
+          }
+        },
+        "vehicleType": { "type": "string", "description": "The primary vehicle type used by the carrier (e.g., GMC Yukon 2023)." },
+        "vehicleModel": { "type": "string", "description": "The model of the carrier's vehicle (e.g., Suburban)." },
+        "vehicleYear": { "type": "string", "description": "The manufacturing year of the vehicle." },
+        "plateNumber": { "type": "string", "description": "The license plate number of the carrier's vehicle." },
+        "vehicleCapacity": { "type": "number", "description": "The total number of seats in the carrier's vehicle." },
+        "vehicleImageUrls": {
+            "type": "array",
+            "description": "A list of URLs for the carrier's vehicle images.",
+            "items": { "type": "string", "format": "uri" }
+        },
+        "jurisdiction": {
+            "type": "object",
+            "description": "The carrier's primary operating route for jurisdiction-based filtering.",
+            "properties": {
+                "origin": { "type": "string", "description": "The typical origin country." },
+                "destination": { "type": "string", "description": "The typical destination country of operation." }
+            }
+        },
+        "paymentInformation": {
+            "type": "string",
+            "description": "A flexible text field for the carrier to provide payout instructions (e.g., mobile wallet number, bank details)."
+        },
+        "bagsPerSeat": {
+            "type": "number",
+            "description": "The default number of bags allowed per passenger seat."
+        },
+        "numberOfStops": {
+            "type": "number",
+            "description": "The typical number of stops the carrier makes during a trip."
+        },
+        "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp when the user profile was created."
+        },
+        "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp when the user profile was last updated."
+        },
+        "fcmTokens": {
+            "type": "array",
+            "description": "An array of Firebase Cloud Messaging tokens for sending push notifications.",
+            "items": { "type": "string" }
+        },
+        "lastTokenUpdate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp when the FCM tokens were last updated."
+        }
+      },
+      "required": [
+        "id",
+        "firstName",
+        "lastName",
+        "email",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Trip": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Trip",
+      "type": "object",
+      "description": "Represents an international transport trip. Can be a scheduled trip by a carrier or a request from a traveler.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the trip."
+        },
+        "userId": {
+          "type": "string",
+          "description": "ID of the user who created the trip (can be a traveler or a carrier)."
+        },
+        "carrierId": {
+          "type": "string",
+          "description": "ID of the carrier providing the trip. If created by a carrier, this is the same as userId."
+        },
+        "carrierName": {
+            "type": "string",
+            "description": "The name of the carrier (denormalized for quick display)."
+        },
+        "origin": {
+          "type": "string",
+          "description": "The starting point of the trip."
+        },
+        "destination": {
+          "type": "string",
+          "description": "The final destination of the trip."
+        },
+        "departureDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time of departure."
+        },
+        "arrivalDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The estimated date and time of arrival."
+        },
+        "estimatedDurationHours": {
+            "type": "number",
+            "description": "The estimated duration of the trip in hours, set by the carrier."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Planned", "In-Transit", "Completed", "Cancelled", "Awaiting-Offers", "Pending-Carrier-Confirmation"],
+          "description": "The current status of the trip."
+        },
+        "cargoDetails": {
+            "type": "string",
+            "description": "Details about the cargo being transported."
+        },
+        "passengers": {
+            "type": "number",
+            "description": "Number of passengers for the trip."
+        },
+        "passengersDetails": {
+          "type": "array",
+          "description": "Details of each passenger in the booking.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string", "description": "Full name of the passenger." },
+              "nationality": { "type": "string", "description": "Nationality of the passenger." },
+              "documentNumber": { "type": "string", "description": "Passport or National ID number of the passenger." },
+              "type": { "type": "string", "enum": ["adult", "minor", "infant"], "description": "Type of passenger (adult, minor or infant)." }
+            },
+            "required": ["name", "nationality", "documentNumber", "type"]
+          }
+        },
+        "acceptedOfferId": {
+          "type": "string",
+          "description": "The ID of the offer that the user has accepted."
+        },
+        "bookingIds": {
+            "type": "array",
+            "description": "A list of booking IDs associated with this trip (for ride-sharing).",
+            "items": { "type": "string" }
+        },
+        "price": {
+            "type": "number",
+            "description": "Price per seat for a scheduled trip."
+        },
+        "currency": {
+            "type": "string",
+            "enum": ["JOD", "SAR", "USD"],
+            "description": "The currency for the trip price."
+        },
+        "availableSeats": {
+            "type": "number",
+            "description": "Number of available seats for a ride-sharing trip."
+        },
+        "depositPercentage": {
+            "type": "number",
+            "description": "The percentage of the total price required as a deposit."
+        },
+        "requestType": {
+          "type": "string",
+          "enum": ["General", "Direct"],
+          "description": "Type of the trip request, either to the general market or a direct request to a carrier."
+        },
+        "targetCarrierId": {
+            "type": "string",
+            "description": "The ID of the carrier this request is specifically for, if it's a a Direct request."
+        },
+        "preferredVehicle": {
+            "type": "string",
+            "enum": ["any", "small", "bus"],
+            "description": "The traveler's preferred vehicle type for a request."
+        },
+        "isShared": {
+            "type": "boolean",
+            "description": "Indicates if the traveler is willing to share the ride on a request."
+        },
+        "targetPrice": {
+            "type": "number",
+            "description": "The traveler's target price for a request."
+        },
+        "bagsPerSeat": {
+            "type": "number",
+            "description": "The default number of bags allowed per passenger seat for a trip."
+        },
+        "numberOfStops": {
+            "type": "number",
+            "description": "The typical number of stops the carrier makes during a trip."
+        },
+        "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp when the trip was created."
+        },
+        "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp when the trip was last updated."
+        },
+        "originalCarrierId": {
+            "type": "string",
+            "description": "The ID of the original carrier if the trip was transferred."
+        },
+        "transferStatus": {
+            "type": "string",
+            "enum": ["Transferred"],
+            "description": "Indicates if the trip has been transferred."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "origin",
+        "destination",
+        "departureDate",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Booking": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Booking",
+      "type": "object",
+      "description": "Represents a booking made by a user for a specific trip.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the booking."
+        },
+        "tripId": {
+          "type": "string",
+          "description": "ID of the associated trip."
+        },
+        "userId": {
+          "type": "string",
+          "description": "ID of the user who made the booking."
+        },
+        "carrierId": {
+          "type": "string",
+          "description": "ID of the carrier providing the trip (denormalized for rule validation)."
+        },
+        "seats": {
+          "type": "number",
+          "description": "Number of seats booked."
+        },
+        "passengersDetails": {
+          "type": "array",
+          "description": "Details of each passenger in the booking.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string", "description": "Full name of the passenger." },
+              "nationality": { "type": "string", "description": "Nationality of the passenger." },
+              "documentNumber": { "type": "string", "description": "Passport or National ID number of the passenger." },
+              "type": { "type": "string", "enum": ["adult", "minor", "infant"], "description": "Type of passenger (adult, minor or infant)." }
+            },
+            "required": ["name", "nationality", "documentNumber", "type"]
+          }
+        },
+        "status": {
+            "type": "string",
+            "enum": ["Confirmed", "Pending-Payment", "Cancelled", "Completed", "Pending-Carrier-Confirmation", "Rated"],
+            "description": "The status of the booking."
+        },
+        "totalPrice": {
+            "type": "number",
+            "description": "Total price for the booking."
+        },
+        "currency": {
+            "type": "string",
+            "enum": ["JOD", "SAR", "USD"],
+            "description": "The currency for the booking price."
+        },
+        "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp when the booking was created."
+        },
+        "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp when the booking was last updated."
+        },
+        "cancelledBy": {
+          "type": "string",
+          "enum": ["carrier", "traveler"],
+          "description": "Indicates who initiated the cancellation."
+        },
+        "cancellationReason": {
+          "type": "string",
+          "description": "The reason for the cancellation, if provided."
+        },
+        "consentTimestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the user legally consented to the booking terms by paying the deposit."
+        },
+        "cancelledAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the cancellation was processed."
+        },
+        "cancellationFee": {
+            "type": "number",
+            "description": "The documented cancellation fee based on policy."
+        },
+        "refundStatus": {
+            "type": "string",
+            "enum": ["Non-Refundable (Late)", "Refundable (Early)"],
+            "description": "The documented financial status of the deposit."
+        },
+        "cancellationPolicySnapshot": {
+            "type": "string",
+            "description": "The policy rule applied at the time of cancellation."
+        }
+      },
+      "required": [
+        "id",
+        "tripId",
+        "userId",
+        "carrierId",
+        "seats",
+        "status",
+        "passengersDetails",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Offer": {
+      "title": "Offer",
+      "type": "object",
+      "description": "Represents an offer made by a carrier for a specific trip request.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the offer." },
+        "tripId": { "type": "string", "description": "ID of the trip request this offer is for." },
+        "carrierId": { "type": "string", "description": "ID of the carrier making the offer." },
+        "price": { "type": "number", "description": "The price offered by the carrier for the trip." },
+        "currency": {
+            "type": "string",
+            "enum": ["JOD", "SAR", "USD"],
+            "description": "The currency for the offer price."
+        },
+        "notes": { "type": "string", "description": "Optional notes from the carrier." },
+        "status": {
+          "type": "string",
+          "enum": ["Pending", "Accepted", "Rejected"],
+          "description": "The current status of the offer."
+        },
+        "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the offer was created." },
+        "vehicleType": { "type": "string", "description": "The type of vehicle offered." },
+        "vehicleCategory": { "type": "string", "enum": ["small", "bus"], "description": "The category of the vehicle." },
+        "vehicleModelYear": { "type": "number", "description": "The model year of the vehicle." },
+        "availableSeats": { "type": "number", "description": "The number of available seats in the vehicle." },
+        "depositPercentage": { "type": "number", "description": "The deposit percentage required." }
+      },
+      "required": ["id", "tripId", "carrierId", "price", "status", "createdAt", "currency"]
+    },
+    "Notification": {
+        "title": "Notification",
+        "type": "object",
+        "description": "Represents a notification for a user.",
+        "properties": {
+            "id": {
+                "type": "string",
+                "description": "Unique identifier for the notification."
+            },
+            "userId": {
+                "type": "string",
+                "description": "ID of the user who receives the notification."
+            },
+            "title": {
+                "type": "string",
+                "description": "The title of the notification."
+            },
+            "message": {
+                "type": "string",
+                "description": "The main content of the notification."
+            },
+            "type": {
+                "type": "string",
+                "enum": ["new_offer", "booking_confirmed", "trip_update", "payment_reminder", "new_booking_request", "group_chat_message"],
+                "description": "The type of the notification."
+            },
+            "isRead": {
+                "type": "boolean",
+                "description": "Whether the user has read the notification."
+            },
+            "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The timestamp when the notification was created."
+            },
+            "link": {
+                "type": "string",
+                "description": "A URL link to navigate to when the notification is clicked."
+            }
+        },
+        "required": ["id", "userId", "title", "message", "type", "isRead", "createdAt"]
+    },
+    "Rating": {
+      "title": "Rating",
+      "type": "object",
+      "description": "Represents a rating given by a user to a carrier for a trip.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the rating." },
+        "tripId": { "type": "string", "description": "ID of the rated trip." },
+        "carrierId": { "type": "string", "description": "ID of the rated carrier." },
+        "userId": { "type": "string", "description": "ID of the user who gave the rating." },
+        "ratingValue": { "type": "number", "description": "The final weighted average rating value, from 1 to 5.", "minimum": 1, "maximum": 5 },
+        "details": {
+          "type": "object",
+          "description": "The detailed breakdown of the ratings for each criterion.",
+          "properties": {
+            "priceAdherence": { "type": "boolean" },
+            "vehicleMatch": { "type": "boolean" },
+            "serviceStars": { "type": "number", "minimum": 1, "maximum": 5 },
+            "comment": { "type": "string" }
+          },
+          "required": ["priceAdherence", "vehicleMatch", "serviceStars"]
+        },
+        "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the rating was created." }
+      },
+      "required": ["id", "tripId", "carrierId", "userId", "ratingValue", "details", "createdAt"]
+    },
+    "Chat": {
+      "title": "Chat",
+      "type": "object",
+      "description": "Represents a chat channel. Can be a 1-on-1 chat or a group chat for a trip.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the chat channel. For group chats, this will be the tripId." },
+        "tripId": { "type": "string", "description": "ID of the associated trip. This is mandatory for group chats." },
+        "isGroupChat": { "type": "boolean", "description": "If true, this is a group chat for all passengers on a trip." },
+        "participants": { "type": "array", "items": { "type": "string" }, "description": "An array of user IDs participating in the chat." },
+        "lastMessage": { "type": "string", "description": "The content of the last message for display purposes." },
+        "lastMessageSenderId": { "type": "string", "description": "The user ID of the last message sender."},
+        "lastMessageTimestamp": { "type": "string", "format": "date-time", "description": "The timestamp of the last message." },
+        "unreadCounts": {
+            "type": "object",
+            "description": "An object where keys are user IDs and values are the number of unread messages for that user.",
+            "additionalProperties": { "type": "number" }
+        },
+        "isClosed": { "type": "boolean", "description": "If true, no more messages can be sent." }
+      },
+      "required": ["id", "participants", "isGroupChat"]
+    },
+    "Message": {
+      "title": "Message",
+      "type": "object",
+      "description": "Represents a single message within a chat.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the message." },
+        "senderId": { "type": "string", "description": "The user ID of the message sender." },
+        "senderName": { "type": "string", "description": "Denormalized name of the sender for quick display." },
+        "content": { "type": "string", "description": "The text content of the message." },
+        "timestamp": { "type": "string", "format": "date-time", "description": "The timestamp when the message was sent." }
+      },
+      "required": ["id", "senderId", "content", "timestamp"]
+    },
+    "TransferRequest": {
+      "title": "TransferRequest",
+      "type": "object",
+      "description": "Represents a request from one carrier to another to take over a trip and its passengers.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the transfer request." },
+        "originalTripId": { "type": "string", "description": "ID of the trip being transferred." },
+        "fromCarrierId": { "type": "string", "description": "ID of the carrier initiating the transfer." },
+        "toCarrierId": { "type": "string", "description": "ID of the carrier receiving the transfer request." },
+        "status": { "type": "string", "enum": ["pending", "accepted", "rejected"], "description": "The current status of the transfer request." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp when the request was created." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Timestamp when the request was last updated." },
+        "tripDetails": {
+          "type": "object",
+          "description": "Denormalized trip data for quick display.",
+          "properties": {
+            "origin": { "type": "string" },
+            "destination": { "type": "string" },
+            "departureDate": { "type": "string", "format": "date-time" },
+            "passengerCount": { "type": "number" }
+          },
+          "required": ["origin", "destination", "departureDate", "passengerCount"]
+        }
+      },
+      "required": ["id", "originalTripId", "fromCarrierId", "toCarrierId", "status", "createdAt", "tripDetails"]
+    },
+    "SystemConfig": {
+        "title": "SystemConfig",
+        "type": "object",
+        "description": "A document for storing system-wide configurations.",
+        "properties": {
+            "content": {
+                "type": "string",
+                "description": "The main content of the configuration, e.g., the AI knowledge base."
+            },
+            "version": {
+                "type": "number",
+                "description": "A version number for tracking changes."
+            },
+            "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+            }
+        },
+        "required": ["content"]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous",
+      "google.com"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores user profiles, secured by user ID.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/notifications/{notificationId}",
+        "definition": {
+            "entityName": "Notification",
+            "schema": {
+                "$ref": "#/backend/entities/Notification"
+            },
+            "description": "Stores notifications for a specific user as a sub-collection.",
+            "params": [
+                {
+                    "name": "userId",
+                    "description": "The unique identifier for the user."
+                },
+                {
+                    "name": "notificationId",
+                    "description": "The unique identifier for the notification."
+                }
+            ]
+        }
+      },
+      {
+        "path": "/trips/{tripId}",
+        "definition": {
+          "entityName": "Trip",
+          "schema": {
+            "$ref": "#/backend/entities/Trip"
+          },
+          "description": "Stores trip details, accessible by the creating user.",
+          "params": [
+            {
+              "name": "tripId",
+              "description": "The unique identifier for the trip."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/trips/{tripId}/offers/{offerId}",
+        "definition": {
+          "entityName": "Offer",
+          "schema": { "$ref": "#/backend/entities/Offer"},
+          "description": "Stores offers made by carriers for a specific trip request.",
+           "params": [
+            {
+              "name": "tripId",
+              "description": "The unique identifier for the trip."
+            },
+            {
+              "name": "offerId",
+              "description": "The unique identifier for the offer."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/bookings/{bookingId}",
+        "definition": {
+          "entityName": "Booking",
+          "schema": {
+            "$ref": "#/backend/entities/Booking"
+          },
+          "description": "Stores booking details, linking users to trips.",
+          "params": [
+            {
+              "name": "bookingId",
+              "description": "The unique identifier for the booking."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/ratings/{ratingId}",
+        "definition": {
+          "entityName": "Rating",
+          "schema": { "$ref": "#/backend/entities/Rating" },
+          "description": "Stores ratings for trips provided by carriers."
+        }
+      },
+      {
+        "path": "/chats/{chatId}",
+        "definition": {
+          "entityName": "Chat",
+          "schema": { "$ref": "#/backend/entities/Chat" },
+          "description": "Stores chat channel metadata. The chatId can be a bookingId for 1-on-1 chats or a tripId for group chats."
+        }
+      },
+      {
+        "path": "/chats/{chatId}/messages/{messageId}",
+        "definition": {
+          "entityName": "Message",
+          "schema": { "$ref": "#/backend/entities/Message" },
+          "description": "Stores all messages for a specific chat channel."
+        }
+      },
+       {
+        "path": "/transferRequests/{transferRequestId}",
+        "definition": {
+          "entityName": "TransferRequest",
+          "schema": { "$ref": "#/backend/entities/TransferRequest" },
+          "description": "Stores requests from one carrier to another to take over a trip."
+        }
+      },
+      {
+        "path": "/system_config/{docId}",
+        "definition": {
+          "entityName": "SystemConfig",
+          "schema": {
+            "$ref": "#/backend/entities/SystemConfig"
+          },
+          "description": "Stores global system configurations like knowledge bases.",
+          "params": [
+            {
+              "name": "docId",
+              "description": "The unique identifier for the config document, e.g., 'knowledge_base'."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

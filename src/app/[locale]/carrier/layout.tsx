@@ -1,0 +1,333 @@
+"use client";
+
+import { useState, useMemo, useEffect } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useUser, useAuth, useFirestore, useCollection } from "@/firebase";
+import { signOut } from "firebase/auth";
+import {
+  LayoutDashboard,
+  Map,
+  List,
+  MessageSquare,
+  LogOut,
+  Menu,
+  Bell,
+  User,
+  Archive,
+  ListChecks,
+  PlusCircle,
+  Facebook,
+  Instagram,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { collection, query, where, doc, onSnapshot } from "firebase/firestore";
+import { Badge } from "@/components/ui/badge";
+import { CarrierMobileMenu } from "@/components/carrier/carrier-mobile-menu";
+import { CarrierBottomNav } from "@/components/carrier/carrier-bottom-nav";
+import { AddTripDialog } from "./add-trip-dialog";
+import { useToast } from "@/hooks/use-toast";
+import { useUnreadChats } from "@/hooks/use-unread-chats";
+import Image from "next/image";
+
+interface CarrierLayoutProps {
+  children: React.ReactNode;
+}
+
+export default function CarrierLayout({ children }: CarrierLayoutProps) {
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+  const firestore = useFirestore();
+  const { toast } = useToast();
+
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isAddTripOpen, setIsAddTripOpen] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
+  const [isSocialOpen, setIsSocialOpen] = useState(false);
+
+  useEffect(() => {
+    if (user?.uid && firestore) {
+      const unsub = onSnapshot(
+        doc(firestore, "users", user.uid),
+        (docSnapshot) => {
+          if (docSnapshot.exists()) {
+            setProfile(docSnapshot.data());
+          }
+        },
+      );
+      return () => unsub();
+    }
+  }, [user, firestore]);
+
+  const unreadChatsCount = useUnreadChats();
+
+  const pendingBookingsQuery = useMemo(() => {
+    if (!user?.uid || !firestore) return null;
+    return query(
+      collection(firestore, "bookings"),
+      where("carrierId", "==", user.uid),
+      where("status", "==", "Pending-Carrier-Confirmation"),
+    );
+  }, [user, firestore]);
+  const { data: pendingBookings } = useCollection(pendingBookingsQuery);
+  const pendingBookingsCount = pendingBookings?.length || 0;
+
+  const handleAddTripClick = () => {
+    if (profile?.currentActiveTripId) {
+      toast({
+        variant: "destructive",
+        title: "لديك رحلة نشطة بالفعل",
+        description:
+          "سياسة المنصة لا تسمح بوجود أكثر من رحلة نشطة في نفس الوقت.",
+      });
+    } else {
+      setIsAddTripOpen(true);
+    }
+  };
+
+  const handleLogout = async () => {
+    if (auth) {
+      await signOut(auth);
+    }
+    router.push("/login");
+  };
+
+  const navLinks = [
+    {
+      href: "/carrier",
+      label: "القيادة",
+      icon: LayoutDashboard,
+      exact: true,
+      count: 0,
+      mobile: true,
+    },
+    {
+      href: "/carrier/opportunities",
+      label: "السوق",
+      icon: Map,
+      exact: false,
+      count: 0,
+      mobile: true,
+    },
+    {
+      href: "/carrier/bookings",
+      label: "الطلبات",
+      icon: List,
+      exact: false,
+      count: pendingBookingsCount,
+      mobile: true,
+    },
+    {
+      href: "/chats",
+      label: "الرسائل",
+      icon: MessageSquare,
+      exact: false,
+      count: unreadChatsCount,
+      mobile: true,
+    },
+    {
+      href: "/carrier/trips",
+      label: "رحلاتي",
+      icon: List,
+      exact: false,
+      count: 0,
+    },
+    {
+      href: "/carrier/archive",
+      label: "الأرشيف",
+      icon: Archive,
+      exact: true,
+      count: 0,
+    },
+    {
+      href: "/carrier/conditions",
+      label: "الشروط الدائمة",
+      icon: ListChecks,
+      exact: true,
+      count: 0,
+    },
+  ];
+
+  if (isUserLoading) return null;
+
+  return (
+    <>
+      <div className="flex min-h-screen flex-col bg-background">
+        <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="container flex h-16 items-center justify-between px-4">
+            <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="md:hidden">
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">القائمة</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="p-0">
+                <CarrierMobileMenu
+                  onLinkClick={() => setIsSidebarOpen(false)}
+                  navLinks={navLinks}
+                />
+              </SheetContent>
+            </Sheet>
+
+            <div className="flex items-center gap-2">
+              <Sheet open={isSocialOpen} onOpenChange={setIsSocialOpen}>
+                <SheetTrigger asChild>
+                  {/* اللوجو نفسه يكون Trigger بدون خلفية */}
+                  <div className="cursor-pointer mt-5">
+                    <Image
+                      src="/logo.png"
+                      alt="سفريات"
+                      width={150}
+                      height={40}
+                      priority
+                    />
+                  </div>
+                </SheetTrigger>
+
+                {/* محتوى Popup */}
+                <SheetContent
+                  side="top"
+                  className="max-w-sm mx-auto mt-12 p-6 rounded-2xl shadow-lg bg-background/95 backdrop-blur-md border border-muted-foreground/10"
+                >
+                  <h3 className="text-lg font-semibold mb-4 text-center">
+                    تابعنا على السوشيال ميديا
+                  </h3>
+                  <div className="flex flex-col gap-4">
+                    <a
+                      href="https://www.facebook.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-black hover:text-white transition-colors"
+                    >
+                      <Facebook />
+                      <span className="font-medium">فيسبوك</span>
+                    </a>
+
+                    <a
+                      href="https://www.instagram.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-black hover:text-white transition-colors"
+                    >
+                      <Instagram />
+                      <span className="font-medium">إنستاجرام</span>
+                    </a>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+
+            <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
+              {navLinks
+                .filter((l) => !l.mobile)
+                .map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`transition-colors hover:text-primary ${pathname === item.href ? "text-primary" : "text-muted-foreground"}`}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+            </nav>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                asChild
+                className="relative ml-1 "
+              >
+                <Link href="/chats">
+                  <Bell className="h-5 w-5" />
+                  {unreadChatsCount > 0 && (
+                    <Badge
+                      variant="destructive"
+                      className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center rounded-full p-0 text-[10px] animate-in zoom-in"
+                    >
+                      {unreadChatsCount > 9 ? "+9" : unreadChatsCount}
+                    </Badge>
+                  )}
+                  <span className="sr-only">الرسائل</span>
+                </Link>
+              </Button>
+              <div className="hidden md:block">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="relative h-9 w-9 rounded-full"
+                    >
+                      <Avatar className="h-9 w-9 border-2 border-primary/10">
+                        <AvatarImage
+                          src={user?.photoURL || ""}
+                          alt={profile?.firstName || "Carrier"}
+                        />
+                        <AvatarFallback className="bg-primary/5 text-primary">
+                          {profile?.firstName?.[0] || "C"}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">
+                          {profile?.firstName} {profile?.lastName}
+                        </p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          {user?.email}
+                        </p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild className="cursor-pointer">
+                      <Link
+                        href="/carrier/profile"
+                        className="flex items-center"
+                      >
+                        <User className="mr-2 h-4 w-4" />
+                        <span>ملف الناقل</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={handleLogout}
+                      className="text-destructive focus:text-destructive cursor-pointer"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>تسجيل الخروج</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main className="flex-1 container py-6 px-4 md:px-6 mb-20 md:mb-0">
+          {children}
+        </main>
+
+        <CarrierBottomNav
+          onAddTripClick={handleAddTripClick}
+          navLinks={navLinks}
+        />
+      </div>
+      <AddTripDialog isOpen={isAddTripOpen} onOpenChange={setIsAddTripOpen} />
+    </>
+  );
+}

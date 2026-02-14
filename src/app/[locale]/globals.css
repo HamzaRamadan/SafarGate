@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 346 51% 13%; /* #321118 */
+    --foreground: 210 40% 98%;
+
+    --card: 348 52% 8%; /* #1F0A10 */
+    --card-foreground: 210 40% 98%;
+
+    --popover: 348 52% 8%; /* #1F0A10 */
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 46 36% 61%; /* #beae77 */
+    --primary-foreground: 30 8% 10%;
+
+    --secondary: 30 8% 12%; /* Slightly lighter black */
+    --secondary-foreground: 210 40% 96.1%;
+
+    --muted: 30 8% 12%; /* Slightly lighter black */
+    --muted-foreground: 46 36% 61%; /* GOLDEN */
+
+    --accent: 338 50% 26%; /* #632139 */
+    --accent-foreground: 210 40% 98%; /* White text on dark accent */
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 46 36% 61%; /* Golden border */
+    --input: 0 0% 14%;
+    --ring: 46 36% 61%;
+    
+    --turquoise: 180 30% 55%; /* NEW COLOR */
+    
+    --chart-1: 45 74% 49%;
+    --chart-2: 350 20% 40%;
+    --chart-3: 210 40% 58%;
+    --chart-4: 30 100% 50%;
+    --chart-5: 280 65% 60%;
+    
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 346 51% 13%; /* #321118 */
+    --foreground: 210 40% 98%;
+
+    --card: 348 52% 8%; /* #1F0A10 */
+    --card-foreground: 210 40% 98%;
+
+    --popover: 348 52% 8%; /* #1F0A10 */
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 46 36% 61%; /* #beae77 */
+    --primary-foreground: 30 8% 10%;
+
+    --secondary: 30 8% 12%; /* Slightly lighter black */
+    --secondary-foreground: 210 40% 96.1%;
+
+    --muted: 30 8% 12%; /* Slightly lighter black */
+    --muted-foreground: 46 36% 61%; /* GOLDEN */
+
+    --accent: 338 50% 26%; /* #632139 */
+    --accent-foreground: 210 40% 98%; /* White text on dark accent */
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 46 36% 61%; /* Golden border */
+    --input: 0 0% 14%;
+    --ring: 46 36% 61%;
+    
+    --turquoise: 180 30% 55%; /* NEW COLOR */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html, body {
+    @apply bg-background text-foreground;
+    font-family: 'Tajawal', sans-serif;
+    overflow-x: hidden;
+  }
+}
+
+@layer components {
+  .carrier-bottom-nav {
+    @apply md:hidden fixed bottom-0 left-0 right-0 h-20 bg-card border-t shadow-[0_-4px_12px_rgba(0,0,0,0.1)] z-50;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}

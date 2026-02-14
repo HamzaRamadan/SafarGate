@@ -1,0 +1,34 @@
+{
+  "placeholderImages": [
+    {
+      "id": "user-avatar",
+      "description": "A placeholder image for a user's avatar.",
+      "imageUrl": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwZXJzb24lMjBwb3J0cmFpdHxlbnwwfHx8fDE3NjQzNjgzMjZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person portrait"
+    },
+    {
+      "id": "login-background",
+      "description": "A background image for the login screen.",
+      "imageUrl": "https://images.unsplash.com/photo-1605702012553-e954fbde66eb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxjaXR5JTIwbmlnaHR8ZW58MHx8fHwxNzY0MzU0MzM1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "city night"
+    },
+    {
+      "id": "map-placeholder",
+      "description": "A placeholder image for the map view.",
+      "imageUrl": "https://images.unsplash.com/photo-1717343824033-e09a81cf484f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8bWFwJTIwY2l0eXxlbnwwfHx8fDE3NjQzMzQ3MjB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "map city"
+    },
+    {
+      "id": "car-placeholder",
+      "description": "A placeholder image for a vehicle.",
+      "imageUrl": "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "imageHint": "yellow car"
+    },
+    {
+      "id": "safar-logo",
+      "description": "The official Safar Gate logo.",
+      "imageUrl": "https://i.postimg.cc/13q2m8G2/safar-logo.png",
+      "imageHint": "safar logo"
+    }
+  ]
+}

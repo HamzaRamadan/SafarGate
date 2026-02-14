@@ -1,0 +1,34 @@
+
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "hosting": {
+    "source": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "frameworksBackend": {
+      "region": "us-central1"
+    },
+    "rewrites": [
+      {
+        "source": "**",
+        "run": {
+          "serviceId": "nextjs",
+          "region": "us-central1"
+        }
+      }
+    ]
+  },
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs18"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  }
+}
