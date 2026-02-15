@@ -38,9 +38,15 @@ function CarrierInfo({ trip }: { trip: Trip }) {
                 className="flex items-center gap-3 w-full text-right hover:bg-muted/50 p-2 rounded-md transition-colors"
             >
                 <Avatar className="h-10 w-10 border-2 border-background">
-                    <AvatarImage src={carrier?.photoURL} />
-                    <AvatarFallback>{carrier?.firstName?.[0] || 'C'}</AvatarFallback>
-                </Avatar>
+  <AvatarImage 
+    src={carrier?.photoURL || "/default-avatar.png"} 
+    alt={carrier?.firstName || "Carrier Avatar"} 
+  />
+  <AvatarFallback>
+    {carrier?.firstName?.[0] || "C"}
+  </AvatarFallback>
+</Avatar>
+
                 <div className="flex-1">
                     <p className="text-sm font-bold">{carrier?.firstName || trip.carrierName}</p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
