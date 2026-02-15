@@ -1,6 +1,6 @@
 'use server';
-import * as functions from 'firebase-functions';
-import * as admin from 'firebase-admin';
+import * as functions from "firebase-functions/v2";
+import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 
 // Initialize Admin SDK
@@ -15,11 +15,12 @@ const messaging = admin.messaging(); // [SC-119] Activate Voice Module
 // 1. New Offer Notification (VOICE RESTORED - SC-119)
 // ---------------------------------------------------------------------
 export const onNewOffer = functions.firestore
-  .document('trips/{tripId}/offers/{offerId}')
-  .onCreate(async (snap, context) => {
-    const offer = snap.data();
-    const tripId = context.params.tripId;
-    const offerId = context.params.offerId;
+  .document("trips/{tripId}/offers/{offerId}")
+  .onDocumentCreated(async (event) => {
+    const offer = event.data; // بدل snap.data()
+    const tripId = event.params.tripId;
+
+    console.log("New offer created for trip:", tripId, offer);
 
     try {
       const tripSnap = await db.collection('trips').doc(tripId).get();
