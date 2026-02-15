@@ -39,7 +39,11 @@ export function OfferCard({ offer, carrier, onAccept, isAccepting }: OfferCardPr
 
             <div className="p-5 pt-10 flex-1 flex flex-col items-center text-center space-y-3">
                 <Avatar className="h-16 w-16 border-2 border-background shadow-sm">
-                    <AvatarImage src={carrier.photoURL} alt={carrier.firstName} />
+                    <AvatarImage 
+  src={carrier.photoURL || "/default-avatar.png"} 
+  alt={carrier.firstName || "Carrier Avatar"} 
+/>
+
                     <AvatarFallback>{carrier.firstName?.charAt(0) || 'C'}</AvatarFallback>
                 </Avatar>
                 
