@@ -106,7 +106,7 @@ export function CarrierTrustSheet({ carrierId, isOpen, onClose, carrierName, car
           <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16 border-2 border-primary/20">
               {/* <AvatarImage src={carrierImage} /> */}
-              <AvatarImage src={carrierImage || "/default-avatar.png"} />
+              <AvatarImage src={carrierImage || "/default-avatar.png"} alt={''} />
 
               <AvatarFallback>{carrierName?.[0] || '?'}</AvatarFallback>
             </Avatar>
