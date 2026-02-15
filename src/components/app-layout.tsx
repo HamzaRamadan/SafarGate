@@ -1,8 +1,8 @@
 "use client";
 
 import { ReactNode, useState } from "react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { Link } from "@/i18n/routing";
+import { usePathname, useRouter } from "@/i18n/routing";
 import { useUserProfile } from "@/hooks/use-user-profile";
 import { useAuth, useFunctions } from "@/firebase";
 import { signOut } from "firebase/auth";
@@ -33,7 +33,7 @@ import { Badge } from "@/components/ui/badge";
 import { useUnreadChats } from "@/hooks/use-unread-chats";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -48,11 +48,14 @@ export function AppLayout({ children }: AppLayoutProps) {
   const unreadCount = useUnreadChats();
   const { toast } = useToast();
   const [isSocialOpen, setIsSocialOpen] = useState(false);
-  const locale = useLocale(); // ✅ أضف هذا
+  const locale = useLocale();
+  const t = useTranslations('nav');
+  const tProfile = useTranslations('profile');
+  const tCommon = useTranslations('common');
 
   const navItems = [
-    { href: "/dashboard", label: "الرئيسية", icon: LayoutGrid },
-    { href: "/chats", label: "الرسائل", icon: MessageSquare },
+    { href: "/dashboard", label: t('dashboard'), icon: LayoutGrid },
+    { href: "/chats", label: t('chats'), icon: MessageSquare },
   ];
 
   const handleLogout = async () => {
@@ -66,7 +69,9 @@ export function AppLayout({ children }: AppLayoutProps) {
     if (!functions) return;
     if (
       !confirm(
-        "⚠️ تحذير نهائي: هل أنت متأكد من حذف حسابك؟\n\nسيتم مسح بياناتك الشخصية ولن تتمكن من استرجاعها. سجلات رحلاتك ستبقى للأغراض الأمنية فقط.",
+        locale === 'ar' 
+          ? "⚠️ تحذير نهائي: هل أنت متأكد من حذف حسابك؟\n\nسيتم مسح بياناتك الشخصية ولن تتمكن من استرجاعها. سجلات رحلاتك ستبقى للأغراض الأمنية فقط."
+          : "⚠️ Final Warning: Are you sure you want to delete your account?\n\nYour personal data will be deleted and cannot be recovered. Your trip records will remain for security purposes only."
       )
     )
       return;
@@ -75,11 +80,11 @@ export function AppLayout({ children }: AppLayoutProps) {
 
     try {
       toast({
-        title: "جاري الحذف...",
-        description: "يتم الآن إزالة بياناتك من النظام.",
+        title: locale === 'ar' ? "جاري الحذف..." : "Deleting...",
+        description: locale === 'ar' ? "يتم الآن إزالة بياناتك من النظام." : "Removing your data from the system.",
       });
       await deleteFn();
-      toast({ title: "تم حذف الحساب بنجاح" });
+      toast({ title: locale === 'ar' ? "تم حذف الحساب بنجاح" : "Account deleted successfully" });
       if (auth) {
         await signOut(auth);
       }
@@ -88,8 +93,8 @@ export function AppLayout({ children }: AppLayoutProps) {
       console.error(error);
       toast({
         variant: "destructive",
-        title: "خطأ",
-        description: error.message || "لم نتمكن من حذف الحساب. حاول مرة أخرى.",
+        title: tCommon('error'),
+        description: error.message || tCommon('error'),
       });
     }
   };
@@ -104,10 +109,10 @@ export function AppLayout({ children }: AppLayoutProps) {
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden">
                 <Menu className="h-5 w-5" />
-                <span className="sr-only">القائمة</span>
+                <span className="sr-only">{locale === 'ar' ? 'القائمة' : 'Menu'}</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right">
+            <SheetContent side={locale === 'ar' ? 'right' : 'left'}>
               <nav className="flex flex-col gap-4 mt-8">
                 {navItems.map((item) => {
                   const Icon = item.icon;
@@ -132,7 +137,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   onClick={handleLogout}
                 >
                   <LogOut className="h-5 w-5" />
-                  تسجيل خروج
+                  {t('logout')}
                 </Button>
               </nav>
             </SheetContent>
@@ -142,11 +147,10 @@ export function AppLayout({ children }: AppLayoutProps) {
           <div className="flex items-center gap-2">
             <Sheet open={isSocialOpen} onOpenChange={setIsSocialOpen}>
               <SheetTrigger asChild>
-                {/* اللوجو نفسه يكون Trigger بدون خلفية */}
                 <div className="cursor-pointer mt-5">
                   <Image
                     src="/logo.png"
-                    alt="سفريات"
+                    alt={locale === 'ar' ? 'سفريات' : 'Safar Gate'}
                     width={150}
                     height={40}
                     priority
@@ -154,13 +158,12 @@ export function AppLayout({ children }: AppLayoutProps) {
                 </div>
               </SheetTrigger>
 
-              {/* محتوى Popup */}
               <SheetContent
                 side="top"
                 className="max-w-sm mx-auto mt-12 p-6 rounded-2xl shadow-lg bg-background/95 backdrop-blur-md border border-muted-foreground/10"
               >
                 <h3 className="text-lg font-semibold mb-4 text-center">
-                  تابعنا على السوشيال ميديا
+                  {locale === 'ar' ? 'تابعنا على السوشيال ميديا' : 'Follow us on social media'}
                 </h3>
                 <div className="flex flex-col gap-4">
                   <a
@@ -170,7 +173,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                     className="flex items-center gap-3 p-2 rounded-lg hover:bg-black hover:text-white transition-colors"
                   >
                     <Facebook />
-                    <span className="font-medium">فيسبوك</span>
+                    <span className="font-medium">{locale === 'ar' ? 'فيسبوك' : 'Facebook'}</span>
                   </a>
 
                   <a
@@ -180,14 +183,14 @@ export function AppLayout({ children }: AppLayoutProps) {
                     className="flex items-center gap-3 p-2 rounded-lg hover:bg-black hover:text-white transition-colors"
                   >
                     <Instagram />
-                    <span className="font-medium">إنستاجرام</span>
+                    <span className="font-medium">{locale === 'ar' ? 'إنستاجرام' : 'Instagram'}</span>
                   </a>
                 </div>
               </SheetContent>
             </Sheet>
           </div>
 
-          {/* Desktop Navigation - [STERILIZED] */}
+          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
             {navItems.map((item) => (
               <Link
@@ -207,8 +210,13 @@ export function AppLayout({ children }: AppLayoutProps) {
           {/* User Profile & Actions */}
           <div className="flex items-center gap-2">
             {user ? (
-              <div className="flex items-center gap-3">
-                {/* [SC-172] Bell Icon updated to link to chats */}
+              <div 
+                className="flex items-center gap-3" 
+                style={{ 
+                  marginRight: locale === 'ar' ? '64px' : '0',
+                  marginLeft: locale === 'en' ? '64px' : '0'
+                }}
+              >
                 <Button
                   variant="ghost"
                   size="icon"
@@ -225,15 +233,14 @@ export function AppLayout({ children }: AppLayoutProps) {
                         {unreadCount > 9 ? "+9" : unreadCount}
                       </Badge>
                     )}
-                    <span className="sr-only">الرسائل</span>
+                    <span className="sr-only">{t('chats')}</span>
                   </Link>
                 </Button>
 
                 <span className="text-sm font-medium hidden sm:inline-block">
-                  {profile?.firstName || "المسافر"}
+                  {profile?.firstName || (locale === 'ar' ? 'المسافر' : 'Traveler')}
                 </span>
 
-                {/* [SC-194] Modified Dropdown Menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -268,7 +275,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                       <DropdownMenuItem asChild className="cursor-pointer">
                         <Link href="/profile" className="flex items-center">
                           <User className="mr-2 h-4 w-4" />
-                          <span>الملف الشخصي</span>
+                          <span>{t('profile')}</span>
                         </Link>
                       </DropdownMenuItem>
                     )}
@@ -279,7 +286,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                       className="text-amber-600 focus:text-amber-600 focus:bg-amber-50 cursor-pointer"
                     >
                       <LogOut className="mr-2 h-4 w-4" />
-                      <span>تسجيل الخروج</span>
+                      <span>{t('logout')}</span>
                     </DropdownMenuItem>
 
                     {profile?.role === "traveler" && (
@@ -290,7 +297,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                           className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
-                          <span>حذف حسابي نهائياً</span>
+                          <span>{locale === 'ar' ? 'حذف حسابي نهائياً' : 'Delete My Account'}</span>
                         </DropdownMenuItem>
                       </>
                     )}
@@ -299,7 +306,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               </div>
             ) : (
               <Link href="/login">
-                <Button size="sm">تسجيل دخول</Button>
+                <Button size="sm">{t('login')}</Button>
               </Link>
             )}
           </div>

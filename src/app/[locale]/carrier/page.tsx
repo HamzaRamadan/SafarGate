@@ -3,7 +3,8 @@
 import { useMemo, useState } from 'react';
 import { useUser, useFirestore, useCollection, updateDocumentNonBlocking, useDoc } from '@/firebase';
 import { collection, query, where, limit, doc, serverTimestamp, updateDoc } from 'firebase/firestore';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
+import { useTranslations, useLocale } from 'next-intl';
 import { AlertCircle, Route, Search, Star, ShieldCheck, Sparkles, ChevronLeft, Award, ArrowRightLeft, Zap } from 'lucide-react';
 import { BookingActionCard } from '@/components/carrier/booking-action-card';
 import { MyTripsList } from '@/components/carrier/my-trips-list';
@@ -30,13 +31,16 @@ const getTierIcon = (tier?: CarrierTier) => {
 };
 
 // Helper: Get Label & Style
-const getTierLabel = (tier?: CarrierTier) => {
-     switch(tier) {
-        case 'PLATINUM': return { text: 'نخبة', bg: 'bg-slate-900 text-white border-slate-700' };
-        case 'GOLD': return { text: 'ذهبي', bg: 'bg-yellow-50 text-yellow-700 border-yellow-200' };
-        case 'SILVER': return { text: 'فضي', bg: 'bg-slate-50 text-slate-700 border-slate-200' };
-        default: return { text: 'برونزي', bg: 'bg-orange-50 text-orange-700 border-orange-200' };
-    }
+const getTierLabel = (locale: string, tier?: CarrierTier) => {
+
+    const labels = {
+        'PLATINUM': { ar: 'نخبة', en: 'Elite', bg: 'bg-slate-900 text-white border-slate-700' },
+        'GOLD': { ar: 'ذهبي', en: 'Gold', bg: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+        'SILVER': { ar: 'فضي', en: 'Silver', bg: 'bg-slate-50 text-slate-700 border-slate-200' },
+        'BRONZE': { ar: 'برونزي', en: 'Bronze', bg: 'bg-orange-50 text-orange-700 border-orange-200' }
+    };
+    const key = tier || 'BRONZE';
+    return { text: labels[key][locale as 'ar' | 'en'], bg: labels[key].bg };
 };
 
 export default function CarrierDashboardPage() {
@@ -44,6 +48,8 @@ export default function CarrierDashboardPage() {
   const firestore = useFirestore();
   const { profile: userProfile, isLoading: isLoadingProfile } = useUserProfile();
   const { toast } = useToast();
+  const t = useTranslations('carrier');
+  const locale = useLocale();
   const [tripToEdit, setTripToEdit] = useState<Trip | null>(null);
   const [isMyTrustSheetOpen, setIsMyTrustSheetOpen] = useState(false);
   
@@ -88,9 +94,9 @@ export default function CarrierDashboardPage() {
       const bookingRef = doc(firestore, 'bookings', bookingId);
       try {
           await updateDoc(bookingRef, { status: 'Rejected', updatedAt: serverTimestamp() });
-          toast({ title: 'تم رفض الحجز ❌' });
+          toast({ title: t('bookingRejected') });
       } catch (error) {
-          toast({ variant: 'destructive', title: 'فشل العملية' });
+          toast({ variant: 'destructive', title: t('operationFailed') });
           throw error;
       }
   };
@@ -101,7 +107,7 @@ export default function CarrierDashboardPage() {
     if (!firestore) return;
     const tripRef = doc(firestore, 'trips', trip.id);
     updateDocumentNonBlocking(tripRef, { ...data, updatedAt: serverTimestamp() });
-    toast({ title: "تم تحديث الرحلة", description: "تم حفظ التعديلات على رحلتك." });
+    toast({ title: t('tripUpdated'), description: t('tripUpdatedDesc') });
     setTripToEdit(null);
   };
   
@@ -132,7 +138,7 @@ export default function CarrierDashboardPage() {
                                 {userProfile?.firstName} {userProfile?.lastName}
                             </h1>
                             <span className="text-sm font-normal text-muted-foreground bg-secondary px-3 -mr-3 py-1.5 rounded-full">
-                                  ناقل
+                                  {t('title')}
                                 </span>
                         </div>
                     </div>
@@ -143,7 +149,7 @@ export default function CarrierDashboardPage() {
                         <div className="h-10 w-10 bg-background rounded-full flex items-center justify-center shadow-sm border border-border hover:bg-muted">
                             <ChevronLeft className="h-5 w-5 text-muted-foreground" />
                         </div>
-                        <span className="text-[10px] font-medium text-muted-foreground">السجل</span>
+                        <span className="text-[10px] font-medium text-muted-foreground">{t('record')}</span>
                     </button>
                 </div>
             </Card>
@@ -158,8 +164,8 @@ export default function CarrierDashboardPage() {
                      <Link href="/carrier/bookings">
                         <Alert className="bg-red-50 border-red-200 cursor-pointer hover:bg-red-100 transition-colors">
                             <ArrowRightLeft className="h-4 w-4 text-red-600" />
-                            <AlertTitle className="text-red-700 font-bold">نداء عاجل: طلب نقل ركاب</AlertTitle>
-                            <AlertDescription className="text-red-600 text-xs">زميل لك يطلب المساعدة في نقل ركاب. اضغط للاستجابة فوراً.</AlertDescription>
+                            <AlertTitle className="text-red-700 font-bold">{t('urgentTransfer')}</AlertTitle>
+                            <AlertDescription className="text-red-600 text-xs">{t('urgentTransferDesc')}</AlertDescription>
                         </Alert>
                      </Link>
                  )}
@@ -167,8 +173,8 @@ export default function CarrierDashboardPage() {
                      <Link href="/carrier/bookings">
                         <Alert className="bg-blue-50 border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors">
                             <Zap className="h-4 w-4 text-blue-600" />
-                            <AlertTitle className="text-blue-700 font-bold">طلب خاص ومباشر</AlertTitle>
-                            <AlertDescription className="text-blue-600 text-xs">وصلك طلب خاص من مسافر. لك الأولوية في الرد.</AlertDescription>
+                            <AlertTitle className="text-blue-700 font-bold">{t('directRequest')}</AlertTitle>
+                            <AlertDescription className="text-blue-600 text-xs">{t('directRequestDesc')}</AlertDescription>
                         </Alert>
                      </Link>
                  )}
@@ -178,8 +184,8 @@ export default function CarrierDashboardPage() {
          {/* 3. Action Section */}
          <section className="space-y-3">
             <div className="flex items-center justify-between">
-               <h3 className="text-sm font-bold text-orange-600 flex items-center gap-2"><AlertCircle className="h-4 w-4"/> طلبات تنتظر قرارك</h3>
-               {pendingBookings && pendingBookings.length > 0 && <Link href="/carrier/bookings" className="text-xs text-primary hover:underline">عرض الكل</Link>}
+               <h3 className="text-sm font-bold text-orange-600 flex items-center gap-2"><AlertCircle className="h-4 w-4"/> {t('pendingRequests')}</h3>
+               {pendingBookings && pendingBookings.length > 0 && <Link href="/carrier/bookings" className="text-xs text-primary hover:underline">{t('viewAll')}</Link>}
             </div>
             
             {loadingBookings ? (
@@ -193,15 +199,15 @@ export default function CarrierDashboardPage() {
             ) : (
                <Alert className="bg-muted/30 border-dashed">
                   <Search className="h-4 w-4 text-muted-foreground" />
-                  <AlertTitle className="text-sm">لا توجد طلبات معلقة</AlertTitle>
-                  <AlertDescription className="text-xs text-muted-foreground">صندوق الوارد نظيف. انتقل إلى <Link href="/carrier/opportunities" className="underline font-medium text-primary">سوق الطلبات</Link> للبحث عن ركاب.</AlertDescription>
+                  <AlertTitle className="text-sm">{t('noPending')}</AlertTitle>
+                  <AlertDescription className="text-xs text-muted-foreground">{t('noPendingDesc')}</AlertDescription>
                </Alert>
             )}
          </section>
 
          {isLoading ? <Skeleton className="h-48 w-full" /> : nextTrip ? (
              <section className="space-y-3">
-                <h3 className="text-sm font-bold flex items-center gap-2"><Route className="h-4 w-4 text-blue-600"/> الرحلة القادمة</h3>
+                <h3 className="text-sm font-bold flex items-center gap-2"><Route className="h-4 w-4 text-blue-600"/> {t('nextTrip')}</h3>
                 <MyTripsList trips={[nextTrip]} isLoading={false} onEdit={handleEditTrip} />
              </section>
          ) : null}

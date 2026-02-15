@@ -3,7 +3,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useUser, useFirestore, useCollection } from '@/firebase';
 import { collection, query, where, orderBy, doc, documentId, limit, getDocs } from 'firebase/firestore';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
+import { useTranslations, useLocale } from 'next-intl';
 import { Search, ShipWheel, Filter, Car, Bus, LayoutGrid, Calendar as CalendarIcon, Send, ChevronsUpDown, Check, PlaneTakeoff, PlaneLanding } from 'lucide-react';
 import { ScheduledTripCard } from '@/components/scheduled-trip-card';
 import { Button } from '@/components/ui/button';
@@ -25,7 +26,7 @@ import { Calendar as CalendarPicker } from "@/components/ui/calendar"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { arSA } from 'date-fns/locale';
+import { arSA, enUS } from 'date-fns/locale';
 import { Label } from '@/components/ui/label';
 import { AppLayout } from '@/components/app-layout';
 
@@ -49,6 +50,9 @@ export default function DashboardPage() {
   const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
+  const t = useTranslations('dashboard');
+  const tCommon = useTranslations('common');
+  const locale = useLocale();
   
   // [SC-169] Smart Resume Protocol: Active State Detection
   const activeBookingsQuery = useMemo(() => {
@@ -283,8 +287,8 @@ export default function DashboardPage() {
         if (!snapshot.empty) {
             toast({
                 variant: "destructive",
-                title: "عذراً، لديك رحلة سارية",
-                description: "سياسة المنصة لا تسمح بتعدد الحجوزات النشطة. يرجى إتمام رحلتك الحالية أو إلغاؤها أولاً.",
+                title: t('activeBookingExists'),
+                description: t('activeBookingDesc'),
                 duration: 5000,
             });
             return;
@@ -295,7 +299,7 @@ export default function DashboardPage() {
 
       } catch (error) {
           console.error("Error checking active bookings:", error);
-          toast({ variant: "destructive", title: "خطأ", description: "حدث خطأ أثناء التحقق من بياناتك." });
+          toast({ variant: "destructive", title: tCommon('error'), description: tCommon('error') });
       } finally {
           setIsCheckingActiveBooking(false);
       }
@@ -321,12 +325,12 @@ export default function DashboardPage() {
         await addDocumentNonBlocking(collection(firestore, 'bookings'), { ...bookingData, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
         
         setIsBookingOpen(false);
-        toast({ title: "تم إرسال طلب الحجز بنجاح!", description: "جاري نقلك إلى صفحة حجوزاتك للمتابعة." });
+        toast({ title: t('bookingSent'), description: t('bookingSentDesc') });
         router.push('/history'); 
 
     } catch (error) {
         console.error("Booking failed:", error);
-        toast({ variant: "destructive", title: "فشل إرسال طلب الحجز" });
+        toast({ variant: "destructive", title: t('bookingFailed') });
         throw error;
     }
   };
@@ -338,15 +342,15 @@ export default function DashboardPage() {
     }
     
     const missingFields = [];
-    if (!searchOriginCity) missingFields.push("مدينة الانطلاق");
-    if (!searchDestinationCity) missingFields.push("مدينة الوصول");
-    if (!searchDate) missingFields.push("تاريخ السفر");
+    if (!searchOriginCity) missingFields.push(t('fromCity'));
+    if (!searchDestinationCity) missingFields.push(t('toCity'));
+    if (!searchDate) missingFields.push(t('travelDate'));
 
     if (missingFields.length > 0) {
         toast({ 
             variant: "destructive", 
-            title: "بيانات الطلب غير مكتملة", 
-            description: `لا يمكن تحويل البحث إلى طلب رسمي بدون تحديد: ${missingFields.join('، ')}.` 
+            title: t('requestIncomplete'), 
+            description: `${t('requestIncomplete')}: ${missingFields.join('، ')}.` 
         });
         return;
     }
@@ -356,10 +360,10 @@ export default function DashboardPage() {
 
   const handleRequestSent = () => {
     toast({ 
-        title: "تم نشر طلبك في سوق الفرص!", 
-        description: "يرجى متابعة حالة الطلب في صفحة 'حجوزاتي'. إذا لم تتلقَ عروضاً خلال ساعة، سنقترح عليك حلولاً بديلة.",
+        title: t('requestPublished'), 
+        description: t('requestPublishedDesc'),
         duration: 6000,
-        action: <ToastAction altText="الذهاب لطلباتي" onClick={() => router.push('/history')}>متابعة الطلب</ToastAction>
+        action: <ToastAction altText={t('followRequest')} onClick={() => router.push('/history')}>{t('followRequest')}</ToastAction>
     });
     router.push('/history');
   };
@@ -369,13 +373,14 @@ export default function DashboardPage() {
       return (
           <AppLayout>
               <div className="flex h-[70vh] items-center justify-center">
-                  <p className="animate-pulse font-semibold text-muted-foreground">جاري تأمين المسار...</p>
+                  <p className="animate-pulse font-semibold text-muted-foreground">{t('securingPath')}</p>
               </div>
           </AppLayout>
       );
   }
 
   const isLoading = isLoadingTrips || isLoadingCarriers || isCheckingActiveBooking;
+  const dateLocale = locale === 'ar' ? arSA : enUS;
 
   return (
     <AppLayout>
@@ -383,12 +388,12 @@ export default function DashboardPage() {
         <Accordion type="single" collapsible className="w-full bg-card rounded-lg border shadow-sm" defaultValue={!tripDisplayResult.filtered ? 'search-filter' : undefined}>
           <AccordionItem value="search-filter" className="border-none">
             <AccordionTrigger className="p-4 hover:no-underline font-semibold text-sm">
-              <div className="flex items-center gap-2"><Filter className="w-4 h-4 text-primary"/><span>فلترة البحث وتحديد الوجهة</span></div>
-              {(searchOriginCity || searchDestinationCity) && (<Badge variant="secondary" className="mr-auto text-[10px] font-normal">{getCityName(searchOriginCity) || 'الكل'} <span className="mx-1">→</span> {getCityName(searchDestinationCity) || 'الكل'}</Badge>)}
+              <div className="flex items-center gap-2"><Filter className="w-4 h-4 text-primary"/><span>{t('searchFilter')}</span></div>
+              {(searchOriginCity || searchDestinationCity) && (<Badge variant="secondary" className="mr-auto text-[10px] font-normal">{getCityName(searchOriginCity) || t('all')} <span className="mx-1">→</span> {getCityName(searchDestinationCity) || t('all')}</Badge>)}
             </AccordionTrigger>
             <AccordionContent className="p-4 pt-0 border-t">
                 <div className="grid grid-cols-1 gap-4 pt-4">
-                  <div className="grid grid-cols-2 gap-2 p-1 bg-muted rounded-lg"><Button variant={searchMode === 'all-carriers' ? 'default' : 'ghost'} size="sm" onClick={() => setSearchMode('all-carriers')} className="text-xs rounded-md shadow-none">كل الناقلين</Button><Button variant={searchMode === 'specific-carrier' ? 'default' : 'ghost'} size="sm" onClick={() => setSearchMode('specific-carrier')} className="text-xs rounded-md shadow-none">ناقل محدد</Button></div>
+                  <div className="grid grid-cols-2 gap-2 p-1 bg-muted rounded-lg"><Button variant={searchMode === 'all-carriers' ? 'default' : 'ghost'} size="sm" onClick={() => setSearchMode('all-carriers')} className="text-xs rounded-md shadow-none">{t('allCarriers')}</Button><Button variant={searchMode === 'specific-carrier' ? 'default' : 'ghost'} size="sm" onClick={() => setSearchMode('specific-carrier')} className="text-xs rounded-md shadow-none">{t('specificCarrier')}</Button></div>
                   
                   {searchMode === 'specific-carrier' && (
                     <Popover open={openCarrier} onOpenChange={setOpenCarrier}>
@@ -401,18 +406,18 @@ export default function DashboardPage() {
                         >
                           {selectedCarrier
                             ? `${selectedCarrier.firstName} ${selectedCarrier.lastName}`
-                            : "ابحث عن ناقل..."}
+                            : t('searchCarrier')}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-[300px] p-0" align="start">
                         <Command>
-                          <CommandInput placeholder="اكتب اسم الناقل..." />
-                          <CommandEmpty>لم يتم العثور على ناقل.</CommandEmpty>
+                          <CommandInput placeholder={t('searchCarrier')} />
+                          <CommandEmpty>{t('noCarrierFound')}</CommandEmpty>
                           <CommandGroup>
                             <CommandList>
                               {isLoadingCarriers ? (
-                                <div className="p-2 text-sm text-muted-foreground text-center">جاري التحميل...</div>
+                                <div className="p-2 text-sm text-muted-foreground text-center">{t('loading')}</div>
                               ) : (
                                 allCarriers?.map((carrier) => (
                                   <CommandItem
@@ -443,7 +448,7 @@ export default function DashboardPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label className="text-muted-foreground flex items-center gap-2">
-                          <PlaneTakeoff className="h-4 w-4 text-primary" /> من دولة
+                          <PlaneTakeoff className="h-4 w-4 text-primary" /> {t('fromCountry')}
                         </Label>
                         <Popover open={openOrigin} onOpenChange={setOpenOrigin}>
                           <PopoverTrigger asChild>
@@ -455,14 +460,14 @@ export default function DashboardPage() {
                             >
                               {searchOriginCountry
                                 ? CITIES[searchOriginCountry as keyof typeof CITIES].name
-                                : "اختر دولة الانطلاق..."}
+                                : t('selectOriginCountry')}
                               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-[300px] p-0" align="start">
                             <Command>
-                              <CommandInput placeholder="ابحث عن الدولة..." />
-                              <CommandEmpty>لا توجد دولة بهذا الاسم.</CommandEmpty>
+                              <CommandInput placeholder={t('searchCountry')} />
+                              <CommandEmpty>{t('noCountryFound')}</CommandEmpty>
                               <CommandGroup>
                                 <CommandList>
                                     {Object.entries(CITIES).map(([key, { name }]) => (
@@ -494,13 +499,13 @@ export default function DashboardPage() {
                           <Label className="text-muted-foreground flex items-center gap-2">
                             <span className="opacity-0">.</span>
                           </Label>
-                        <Select onValueChange={setSearchOriginCity} value={searchOriginCity} disabled={!searchOriginCountry}><SelectTrigger className="h-12 bg-card/50 border-muted"><SelectValue placeholder="من (مدينة)" /></SelectTrigger><SelectContent>{searchOriginCountry && (CITIES as any)[searchOriginCountry]?.cities.map((c: string) => (<SelectItem key={c} value={c}>{getCityName(c)}</SelectItem>))}</SelectContent></Select>
+                        <Select onValueChange={setSearchOriginCity} value={searchOriginCity} disabled={!searchOriginCountry}><SelectTrigger className="h-12 bg-card/50 border-muted"><SelectValue placeholder={t('fromCity')} /></SelectTrigger><SelectContent>{searchOriginCountry && (CITIES as any)[searchOriginCountry]?.cities.map((c: string) => (<SelectItem key={c} value={c}>{getCityName(c)}</SelectItem>))}</SelectContent></Select>
                       </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label className="text-muted-foreground flex items-center gap-2">
-                          <PlaneLanding className="h-4 w-4 text-primary" /> إلى دولة
+                          <PlaneLanding className="h-4 w-4 text-primary" /> {t('toCountry')}
                         </Label>
                         <Popover open={openDest} onOpenChange={setOpenDest}>
                           <PopoverTrigger asChild>
@@ -513,14 +518,14 @@ export default function DashboardPage() {
                             >
                               {searchDestinationCountry
                                 ? CITIES[searchDestinationCountry as keyof typeof CITIES]?.name
-                                : (!searchOriginCountry ? "حدد الانطلاق أولاً" : "اختر دولة الوصول...")}
+                                : (!searchOriginCountry ? t('selectOriginFirst') : t('selectDestCountry'))}
                               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-[300px] p-0" align="start">
                             <Command>
-                              <CommandInput placeholder="ابحث عن الدولة..." />
-                              <CommandEmpty>لا توجد وجهات متاحة من دولتك.</CommandEmpty>
+                              <CommandInput placeholder={t('searchCountry')} />
+                              <CommandEmpty>{t('noDestAvailable')}</CommandEmpty>
                               <CommandGroup>
                                 <CommandList>
                                     {availableDestinations.map((key) => (
@@ -553,11 +558,11 @@ export default function DashboardPage() {
                           <Label className="text-muted-foreground flex items-center gap-2">
                             <span className="opacity-0">.</span>
                           </Label>
-                        <Select onValueChange={setSearchDestinationCity} value={searchDestinationCity} disabled={!searchDestinationCountry}><SelectTrigger className="h-12 bg-card/50 border-muted"><SelectValue placeholder="إلى (مدينة)" /></SelectTrigger><SelectContent>{searchDestinationCountry && (CITIES as any)[searchDestinationCountry]?.cities.map((c: string) => (<SelectItem key={c} value={c}>{getCityName(c)}</SelectItem>))}</SelectContent></Select>
+                        <Select onValueChange={setSearchDestinationCity} value={searchDestinationCity} disabled={!searchDestinationCountry}><SelectTrigger className="h-12 bg-card/50 border-muted"><SelectValue placeholder={t('toCity')} /></SelectTrigger><SelectContent>{searchDestinationCountry && (CITIES as any)[searchDestinationCountry]?.cities.map((c: string) => (<SelectItem key={c} value={c}>{getCityName(c)}</SelectItem>))}</SelectContent></Select>
                       </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><Popover><PopoverTrigger asChild><Button variant={"outline"} className={cn("w-full justify-start text-left font-normal",!searchDate&&"text-muted-foreground")}><CalendarIcon className="ml-2 h-4 w-4"/>{searchDate?format(searchDate,"PPP", {locale: arSA}):"تاريخ السفر"}</Button></PopoverTrigger><PopoverContent className="w-auto p-0"><CalendarPicker mode="single" selected={searchDate} onSelect={setSearchDate}/></PopoverContent></Popover><Select onValueChange={(v) => setSearchSeats(parseInt(v))} value={String(searchSeats)}><SelectTrigger><SelectValue placeholder="عدد المقاعد" /></SelectTrigger><SelectContent>{Array.from({length:9},(_,i)=>i+1).map(n=><SelectItem key={n} value={String(n)}>{n}</SelectItem>)}</SelectContent></Select></div>
-                  <div className="space-y-2"><label className="text-xs font-semibold text-muted-foreground flex items-center gap-1"><Car className="h-3 w-3" /> نوع المركبة</label><div className="grid grid-cols-3 gap-2 p-1 bg-muted/50 rounded-lg border"><Button variant={searchVehicleType === 'any' ? 'default' : 'ghost'} size="sm" onClick={() => setSearchVehicleType('any')} className="text-xs h-8 shadow-none"><LayoutGrid className="w-3 h-3 ml-1" /> الكل</Button><Button variant={searchVehicleType === 'small' ? 'default' : 'ghost'} size="sm" onClick={() => setSearchVehicleType('small')} className="text-xs h-8 shadow-none"><Car className="w-3 h-3 ml-1" /> سيارة</Button><Button variant={searchVehicleType === 'bus' ? 'default' : 'ghost'} size="sm" onClick={() => setSearchVehicleType('bus')} className="text-xs h-8 shadow-none"><Bus className="w-3 h-3 ml-1" /> حافلة</Button></div></div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><Popover><PopoverTrigger asChild><Button variant={"outline"} className={cn("w-full justify-start text-left font-normal",!searchDate&&"text-muted-foreground")}><CalendarIcon className="ml-2 h-4 w-4"/>{searchDate?format(searchDate,"PPP", {locale: dateLocale}):t('travelDate')}</Button></PopoverTrigger><PopoverContent className="w-auto p-0"><CalendarPicker mode="single" selected={searchDate} onSelect={setSearchDate} locale={dateLocale}/></PopoverContent></Popover><Select onValueChange={(v) => setSearchSeats(parseInt(v))} value={String(searchSeats)}><SelectTrigger><SelectValue placeholder={t('seatCount')} /></SelectTrigger><SelectContent>{Array.from({length:9},(_,i)=>i+1).map(n=><SelectItem key={n} value={String(n)}>{n}</SelectItem>)}</SelectContent></Select></div>
+                  <div className="space-y-2"><label className="text-xs font-semibold text-muted-foreground flex items-center gap-1"><Car className="h-3 w-3" /> {t('vehicleType')}</label><div className="grid grid-cols-3 gap-2 p-1 bg-muted/50 rounded-lg border"><Button variant={searchVehicleType === 'any' ? 'default' : 'ghost'} size="sm" onClick={() => setSearchVehicleType('any')} className="text-xs h-8 shadow-none"><LayoutGrid className="w-3 h-3 ml-1" /> {t('all')}</Button><Button variant={searchVehicleType === 'small' ? 'default' : 'ghost'} size="sm" onClick={() => setSearchVehicleType('small')} className="text-xs h-8 shadow-none"><Car className="w-3 h-3 ml-1" /> {t('car')}</Button><Button variant={searchVehicleType === 'bus' ? 'default' : 'ghost'} size="sm" onClick={() => setSearchVehicleType('bus')} className="text-xs h-8 shadow-none"><Bus className="w-3 h-3 ml-1" /> {t('bus')}</Button></div></div>
                 </div>
             </AccordionContent>
           </AccordionItem>
@@ -575,13 +580,13 @@ export default function DashboardPage() {
                 </div>
                 
                 <h3 className="text-lg font-bold text-foreground mb-1">
-                    {rescueMode === 'none' ? 'لا توجد رحلات مطابقة تماماً' : 'لا توجد نتائج حتى مع البحث الموسع'}
+                    {rescueMode === 'none' ? t('noTripsExact') : t('noTripsExpanded')}
                 </h3>
                 
                 <p className="text-xs max-w-xs mx-auto mb-6 text-muted-foreground">
                     {rescueMode === 'none' 
-                        ? 'لم نجد رحلة تطابق شروطك 100%. يمكنك البحث بمرونة أكبر أو إنشاء طلب خاص.'
-                        : 'يبدو أن الضغط عالٍ. الخيار الأفضل الآن هو إنشاء طلب رسمي ليصل للناقلين.'}
+                        ? t('tryFlexible')
+                        : t('createRequest')}
                 </p>
                 
                 <div className="flex flex-col w-full max-w-sm gap-3">
@@ -593,7 +598,7 @@ export default function DashboardPage() {
                                 onClick={() => setRescueMode('location')}
                             >
                                 <LayoutGrid className="h-4 w-4" />
-                                <span>بحث شامل في كل {searchDestinationCity ? 'الدولة' : 'المنطقة'} (نفس اليوم)</span>
+                                <span>{t('searchWholeCountry')}</span>
                             </Button>
 
                             <Button 
@@ -602,7 +607,7 @@ export default function DashboardPage() {
                                 onClick={() => setRescueMode('time')}
                             >
                                 <CalendarIcon className="h-4 w-4" />
-                                <span>بحث في الأيام الـ 3 القادمة (نفس المدينة)</span>
+                                <span>{t('searchNext3Days')}</span>
                             </Button>
                         </>
                     )}
@@ -612,12 +617,12 @@ export default function DashboardPage() {
                         onClick={handleRequestAction}
                     >
                         <Send className="h-4 w-4" />
-                        <span>{rescueMode === 'none' ? 'إنشاء طلب خاص (الحل الجذري)' : 'إرسال طلب للمواصفات الأصلية'}</span>
+                        <span>{rescueMode === 'none' ? t('createSpecialRequest') : t('sendOriginalRequest')}</span>
                     </Button>
                     
                     {rescueMode !== 'none' && (
                         <Button variant="ghost" size="sm" onClick={() => setRescueMode('none')} className="text-xs text-muted-foreground">
-                            العودة للبحث الدقيق
+                            {t('backToExact')}
                         </Button>
                     )}
                 </div>
@@ -627,13 +632,13 @@ export default function DashboardPage() {
                   <div className="bg-background p-4 rounded-full mb-4 shadow-sm">
                         <PlaneTakeoff className="h-8 w-8 text-primary/60" />
                   </div>
-                  <h3 className="text-xl font-bold text-foreground mb-2">السوق بانتظارك</h3>
+                  <h3 className="text-xl font-bold text-foreground mb-2">{t('marketWaiting')}</h3>
                   <p className="text-sm max-w-sm mx-auto mb-6 leading-relaxed">
-                      لا توجد رحلات مجدولة حالياً في هذا المسار. كن المبادر واطلب رحلتك الآن ليقوم الناقلون بتقديم عروضهم لك.
+                      {t('noScheduledTrips')}
                   </p>
                   <Button size="lg" className="gap-2 shadow-md hover:shadow-lg transition-all" onClick={handleRequestAction}>
                       <Send className="h-5 w-5" />
-                      إنشاء أول طلب
+                      {t('createFirstRequest')}
                   </Button>
               </div>
           ) : (

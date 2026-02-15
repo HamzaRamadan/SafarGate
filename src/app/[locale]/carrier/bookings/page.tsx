@@ -14,6 +14,7 @@ import { getCityName } from '@/lib/constants';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { OfferDialog } from '@/components/carrier/offer-dialog';
 import { useOfferDialog } from '@/hooks/use-offer-dialog';
+import { useTranslations } from 'next-intl';
 
 // --- Helper Component: FromCarrierInfo ---
 function FromCarrierInfo({ carrierId }: { carrierId: string }) {
@@ -24,10 +25,11 @@ function FromCarrierInfo({ carrierId }: { carrierId: string }) {
     }, [firestore, carrierId]);
 
     const { data: carrier, isLoading } = useDoc<UserProfile>(carrierRef);
+    const t = useTranslations('bookingRequests');
 
     if (isLoading) return <Skeleton className="h-8 w-32 rounded-full" />;
     
-    if (!carrier) return <p className="text-xs text-muted-foreground">ناقل غير معروف</p>;
+    if (!carrier) return <p className="text-xs text-muted-foreground">{t('unknownCarrier')}</p>;
 
     return (
         <div className="flex items-center gap-3">
@@ -36,7 +38,7 @@ function FromCarrierInfo({ carrierId }: { carrierId: string }) {
             </Avatar>
             <div>
                  <p className="text-sm font-bold">{carrier.firstName} {carrier.lastName}</p>
-                 <p className="text-xs text-muted-foreground">زميل ناقل</p>
+                 <p className="text-xs text-muted-foreground">{t('fellowCarrier')}</p>
             </div>
         </div>
     );
@@ -46,6 +48,7 @@ export default function BookingRequestsPage() {
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
+  const t = useTranslations('bookingRequests');
   
   const {
     selectedTrip,
@@ -97,24 +100,21 @@ export default function BookingRequestsPage() {
   const isLoading = loadBookings || loadDirect || loadTransfers;
 
   // --- Action Handlers ---
-
   const handleBookingUpdate = async (bookingId: string, newStatus: 'Confirmed' | 'Rejected') => {
       if (!firestore) return;
       const bookingRef = doc(firestore, 'bookings', bookingId);
       try {
           await updateDoc(bookingRef, { status: newStatus, updatedAt: serverTimestamp() });
-          toast({ title: newStatus === 'Confirmed' ? 'تم تأكيد الحجز ✅' : 'تم رفض الحجز ❌' });
+          toast({ title: newStatus === 'Confirmed' ? t('bookingConfirmed') : t('bookingRejected') });
       } catch (error) {
-          toast({ variant: 'destructive', title: 'فشل العملية' });
+          toast({ variant: 'destructive', title: t('operationFailed') });
       }
   };
 
-  // [SC-116] The FIXED Atomic Transfer Engine (Financial & Operational)
   const handleAcceptTransfer = async (request: TransferRequest) => {
       if (!firestore || !user) return;
       
       try {
-          // 1. التجهيز: جلب جميع التذاكر المرتبطة بالرحلة لضمها للنقل
           const bookingsQuery = query(
               collection(firestore, 'bookings'), 
               where('tripId', '==', request.originalTripId),
@@ -122,10 +122,7 @@ export default function BookingRequestsPage() {
           );
           const bookingsSnap = await getDocs(bookingsQuery);
 
-          // 2. بدء المحرك الذري
           const batch = writeBatch(firestore);
-          
-          // أ. نقل السلطة التشغيلية (الرحلة)
           const tripRef = doc(firestore, 'trips', request.originalTripId);
           batch.update(tripRef, { 
                carrierId: user.uid, 
@@ -133,39 +130,33 @@ export default function BookingRequestsPage() {
                originalCarrierId: request.fromCarrierId 
            });
 
-          // ب. إغلاق طلب النقل
           const reqRef = doc(firestore, 'transferRequests', request.id);
           batch.update(reqRef, { status: 'accepted', updatedAt: serverTimestamp() });
 
-          // ج. تطبيق بروتوكول المحكمة المفتوحة (الدردشة)
           const chatRef = doc(firestore, 'chats', request.originalTripId);
           batch.update(chatRef, { participants: arrayUnion(user.uid) });
 
-          // د. إشعار النظام
           const sysMsgRef = doc(collection(firestore, 'chats', request.originalTripId, 'messages'));
           batch.set(sysMsgRef, {
-              content: `⚠️ إشعار رسمي: انتقلت مسؤولية الرحلة والركاب للكابتن الجديد.`,
+              content: t('systemTransferNotice'),
               type: 'system',
               senderId: 'system',
               timestamp: serverTimestamp()
           });
 
-          // هـ. (الشريان المالي والتشغيلي الجديد): نقل ملكية التذاكر للناقل الجديد
           bookingsSnap.docs.forEach((bookingDoc) => {
               batch.update(bookingDoc.ref, { 
-                  carrierId: user.uid, // نقل الملكية المالية
+                  carrierId: user.uid,
                   updatedAt: serverTimestamp()
               });
           });
 
-          // 3. التنفيذ الذري الشامل
           await batch.commit();
-          
-          toast({ title: "تم النقل بنجاح", description: "تم استلام الرحلة والركاب والحقوق المالية." });
+          toast({ title: t('transferSuccess'), description: t('transferSuccessDesc') });
           
       } catch (error) {
           console.error(error);
-          toast({ variant: "destructive", title: "فشل نقل الرحلة", description: "لم يتم إجراء أي تغيير (تراجع آمن)." });
+          toast({ variant: "destructive", title: t('transferFailed'), description: t('transferFailedDesc') });
       }
   };
   
@@ -185,10 +176,8 @@ export default function BookingRequestsPage() {
                 <div className="bg-muted p-4 rounded-full mb-4">
                     <Inbox className="h-10 w-10 text-muted-foreground" />
                 </div>
-                <h3 className="text-lg font-semibold">صندوق الوارد نظيف</h3>
-                <p className="text-sm text-muted-foreground max-w-xs">
-                    لا توجد طلبات معلقة حالياً. استمتع بوقتك أو ابحث عن ركاب في السوق.
-                </p>
+                <h3 className="text-lg font-semibold">{t('inboxCleanTitle')}</h3>
+                <p className="text-sm text-muted-foreground max-w-xs">{t('inboxCleanDesc')}</p>
             </div>
         )}
         
@@ -196,20 +185,20 @@ export default function BookingRequestsPage() {
             {transfers && transfers.length > 0 && (
                 <section className="space-y-3">
                     <h2 className="text-sm font-bold text-red-600 flex items-center gap-2">
-                        <ArrowRightLeft className="h-4 w-4" /> طلبات نقل طارئة
+                        <ArrowRightLeft className="h-4 w-4" /> {t('emergencyTransfers')}
                         <Badge variant="destructive" className="h-5 px-1.5">{transfers.length}</Badge>
                     </h2>
                     {transfers.map(req => (
                         <div key={req.id} className="border-2 border-red-100 bg-red-50/50 rounded-xl p-4 space-y-3 shadow-sm">
                             <FromCarrierInfo carrierId={req.fromCarrierId} />
                             <div className="text-xs text-muted-foreground bg-background/60 p-2 rounded">
-                                <p><strong>الرحلة:</strong> {getCityName(req.tripDetails.origin)} ➝ {getCityName(req.tripDetails.destination)}</p>
-                                <p><strong>عدد الركاب:</strong> {req.tripDetails.passengerCount}</p>
-                                <p><strong>التاريخ:</strong> {new Date(req.tripDetails.departureDate).toLocaleDateString('ar-EG')}</p>
+                                <p><strong>{t('tripLabel')}:</strong> {getCityName(req.tripDetails.origin)} ➝ {getCityName(req.tripDetails.destination)}</p>
+                                <p><strong>{t('passengersLabel')}:</strong> {req.tripDetails.passengerCount}</p>
+                                <p><strong>{t('dateLabel')}:</strong> {new Date(req.tripDetails.departureDate).toLocaleDateString()}</p>
                             </div>
                             <Button variant="destructive" className="w-full" onClick={() => handleAcceptTransfer(req)}>
                                 <Check className="ml-2 h-4 w-4" />
-                                قبول واستلام
+                                {t('acceptAndReceive')}
                             </Button>
                         </div>
                     ))}
@@ -219,14 +208,14 @@ export default function BookingRequestsPage() {
             {directTrips && directTrips.length > 0 && (
                 <section className="space-y-3">
                     <h2 className="text-sm font-bold text-blue-600 flex items-center gap-2">
-                        <Zap className="h-4 w-4" /> طلبات خاصة مباشرة
+                        <Zap className="h-4 w-4" /> {t('directRequests')}
                         <Badge className="bg-blue-100 text-blue-700 h-5 px-1.5 hover:bg-blue-200">{directTrips.length}</Badge>
                     </h2>
                     {directTrips.map(trip => (
                         <div key={trip.id} className="border border-blue-200 bg-blue-50/30 rounded-xl p-4 shadow-sm">
                             <div className="flex justify-between mb-2">
-                                <span className="font-bold text-sm">طلب خاص لك</span>
-                                <span className="text-xs text-muted-foreground">ينتظر العرض</span>
+                                <span className="font-bold text-sm">{t('specialRequestForYou')}</span>
+                                <span className="text-xs text-muted-foreground">{t('waitingOffer')}</span>
                             </div>
                             <div className="text-sm font-medium mb-4">
                                 {getCityName(trip.origin)} ⬅ {getCityName(trip.destination)}
@@ -242,14 +231,15 @@ export default function BookingRequestsPage() {
             {bookings && bookings.length > 0 && (
                 <section className="space-y-3">
                     <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
-                        <Inbox className="h-4 w-4" /> طلبات الحجز المعلقة
+                        <Inbox className="h-4 w-4" /> {t('pendingBookings')}
                         <Badge variant="secondary" className="h-5 px-1.5">{bookings.length}</Badge>
                     </h2>
                     <div className="grid gap-4 md:grid-cols-2">
                         {bookings.map(booking => (
                             <BookingActionCard 
                                 key={booking.id} 
-                                booking={booking}  onReject={async () => {}} 
+                                booking={booking}  
+                                onReject={async () => {}} 
                             />
                         ))}
                     </div>
@@ -271,5 +261,3 @@ export default function BookingRequestsPage() {
     </>
   );
 }
-
-    

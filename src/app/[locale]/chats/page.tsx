@@ -1,4 +1,5 @@
 'use client';
+
 import { useState, useMemo, useEffect } from 'react';
 import { AppLayout } from '@/components/app-layout';
 import { useUser, useFirestore, useCollection } from '@/firebase';
@@ -13,15 +14,16 @@ import { MessageSquare, Users, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ChatDialog } from '@/components/chat/chat-dialog';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 const ChatListItem = ({ chat, onClick }: { chat: Chat, onClick: () => void }) => {
+  const t = useTranslations('chatsPage');
   const { user } = useUser();
   const unreadCount = chat.unreadCounts?.[user?.uid || ''] || 0;
 
   const safeFormatDistance = (timestamp: any) => {
     if (!timestamp) return '';
     try {
-      // Handle both Firebase Timestamps and potential string dates
       const date = timestamp?.toDate ? timestamp.toDate() : new Date(timestamp);
       return formatDistanceToNow(date, { addSuffix: true, locale: arSA });
     } catch {
@@ -39,10 +41,10 @@ const ChatListItem = ({ chat, onClick }: { chat: Chat, onClick: () => void }) =>
         </Avatar>
         <div className="flex-1">
           <div className="flex justify-between items-center">
-            <p className="font-bold">{chat.isGroupChat ? 'دردشة جماعية للرحلة' : 'محادثة خاصة'}</p>
+            <p className="font-bold">{chat.isGroupChat ? t('groupChat') : t('privateChat')}</p>
             {unreadCount > 0 && <Badge variant="destructive">{unreadCount}</Badge>}
           </div>
-          <p className="text-sm text-muted-foreground truncate">{chat.lastMessage || 'لا توجد رسائل بعد...'}</p>
+          <p className="text-sm text-muted-foreground truncate">{chat.lastMessage || t('noMessages')}</p>
         </div>
         <div className="text-xs text-muted-foreground self-start">
           {safeFormatDistance(chat.lastMessageTimestamp)}
@@ -53,13 +55,13 @@ const ChatListItem = ({ chat, onClick }: { chat: Chat, onClick: () => void }) =>
 };
 
 export default function ChatsPage() {
+  const t = useTranslations('chatsPage');
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const router = useRouter();
 
-  // Command 53: Strategic Alignment - The query now includes orderBy to match the intended logic and security rule.
   const chatsQuery = useMemo(() => {
     if (!firestore || !user) return null;
     return query(
@@ -73,7 +75,6 @@ export default function ChatsPage() {
   const { data: chats, isLoading: isLoadingChats } = useCollection<Chat>(chatsQuery);
   const isLoading = isUserLoading || isLoadingChats;
 
-  // Protocol 6: Safety Redirect
   useEffect(() => {
     if (!isLoading && !user) {
       router.push('/login');
@@ -81,7 +82,6 @@ export default function ChatsPage() {
   }, [user, isLoading, router]);
 
   const handleChatClick = (chat: Chat) => {
-    // When a chat is opened, mark its messages as read for the current user.
     if (firestore && user && (chat.unreadCounts?.[user.uid] ?? 0) > 0) {
         const chatRef = doc(firestore, 'chats', chat.id);
         updateDoc(chatRef, {
@@ -107,8 +107,8 @@ export default function ChatsPage() {
       return (
         <div className="text-center py-16 text-muted-foreground border-2 border-dashed rounded-lg">
           <MessageSquare className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
-          <p className="font-bold">لا توجد لديك أي محادثات.</p>
-          <p className="text-sm mt-1">عندما تبدأ محادثة مع ناقل أو تنضم لرحلة، ستظهر هنا.</p>
+          <p className="font-bold">{t('noChatsTitle')}</p>
+          <p className="text-sm mt-1">{t('noChatsDescription')}</p>
         </div>
       );
     }
@@ -127,8 +127,8 @@ export default function ChatsPage() {
       <div className="container mx-auto max-w-3xl p-4 space-y-6">
         <Card className="bg-card border-primary/50">
           <CardHeader>
-            <h1 className="text-2xl font-bold">مركز الاتصالات</h1>
-            <p className="text-muted-foreground">جميع محادثاتك مع الناقلين والمجموعات في مكان واحد.</p>
+            <h1 className="text-2xl font-bold">{t('headerTitle')}</h1>
+            <p className="text-muted-foreground">{t('headerDescription')}</p>
           </CardHeader>
         </Card>
         {renderContent()}
@@ -139,7 +139,7 @@ export default function ChatsPage() {
           onOpenChange={setIsChatOpen}
           trip={selectedChat.isGroupChat ? { id: selectedChat.id } as Trip : undefined}
           bookingId={!selectedChat.isGroupChat ? selectedChat.id : undefined}
-          otherPartyName={!selectedChat.isGroupChat ? "الناقل" : undefined}
+          otherPartyName={!selectedChat.isGroupChat ? t('carrier') : undefined}
         />
       )}
     </AppLayout>

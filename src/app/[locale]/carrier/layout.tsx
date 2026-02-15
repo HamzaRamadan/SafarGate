@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { Link } from "@/i18n/routing";
+import { usePathname, useRouter } from "@/i18n/routing";
 import { useUser, useAuth, useFirestore, useCollection } from "@/firebase";
 import { signOut } from "firebase/auth";
+import { useTranslations, useLocale } from "next-intl";
 import {
   LayoutDashboard,
   Map,
@@ -51,6 +52,9 @@ export default function CarrierLayout({ children }: CarrierLayoutProps) {
   const pathname = usePathname();
   const firestore = useFirestore();
   const { toast } = useToast();
+  const t = useTranslations('carrierLayout');
+  const tNav = useTranslations('nav');
+  const locale = useLocale();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isAddTripOpen, setIsAddTripOpen] = useState(false);
@@ -88,9 +92,8 @@ export default function CarrierLayout({ children }: CarrierLayoutProps) {
     if (profile?.currentActiveTripId) {
       toast({
         variant: "destructive",
-        title: "لديك رحلة نشطة بالفعل",
-        description:
-          "سياسة المنصة لا تسمح بوجود أكثر من رحلة نشطة في نفس الوقت.",
+        title: t('activeTrip'),
+        description: t('activeTripDesc'),
       });
     } else {
       setIsAddTripOpen(true);
@@ -107,7 +110,7 @@ export default function CarrierLayout({ children }: CarrierLayoutProps) {
   const navLinks = [
     {
       href: "/carrier",
-      label: "القيادة",
+      label: t('command'),
       icon: LayoutDashboard,
       exact: true,
       count: 0,
@@ -115,7 +118,7 @@ export default function CarrierLayout({ children }: CarrierLayoutProps) {
     },
     {
       href: "/carrier/opportunities",
-      label: "السوق",
+      label: t('market'),
       icon: Map,
       exact: false,
       count: 0,
@@ -123,7 +126,7 @@ export default function CarrierLayout({ children }: CarrierLayoutProps) {
     },
     {
       href: "/carrier/bookings",
-      label: "الطلبات",
+      label: t('requests'),
       icon: List,
       exact: false,
       count: pendingBookingsCount,
@@ -131,7 +134,7 @@ export default function CarrierLayout({ children }: CarrierLayoutProps) {
     },
     {
       href: "/chats",
-      label: "الرسائل",
+      label: t('messages'),
       icon: MessageSquare,
       exact: false,
       count: unreadChatsCount,
@@ -139,21 +142,21 @@ export default function CarrierLayout({ children }: CarrierLayoutProps) {
     },
     {
       href: "/carrier/trips",
-      label: "رحلاتي",
+      label: t('myTrips'),
       icon: List,
       exact: false,
       count: 0,
     },
     {
       href: "/carrier/archive",
-      label: "الأرشيف",
+      label: t('archive'),
       icon: Archive,
       exact: true,
       count: 0,
     },
     {
       href: "/carrier/conditions",
-      label: "الشروط الدائمة",
+      label: t('permanentConditions'),
       icon: ListChecks,
       exact: true,
       count: 0,
@@ -171,10 +174,10 @@ export default function CarrierLayout({ children }: CarrierLayoutProps) {
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="md:hidden">
                   <Menu className="h-5 w-5" />
-                  <span className="sr-only">القائمة</span>
+                  <span className="sr-only">{t('menu')}</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="p-0">
+              <SheetContent side={locale === 'ar' ? 'right' : 'left'} className="p-0">
                 <CarrierMobileMenu
                   onLinkClick={() => setIsSidebarOpen(false)}
                   navLinks={navLinks}
@@ -185,11 +188,10 @@ export default function CarrierLayout({ children }: CarrierLayoutProps) {
             <div className="flex items-center gap-2">
               <Sheet open={isSocialOpen} onOpenChange={setIsSocialOpen}>
                 <SheetTrigger asChild>
-                  {/* اللوجو نفسه يكون Trigger بدون خلفية */}
                   <div className="cursor-pointer mt-5">
                     <Image
                       src="/logo.png"
-                      alt="سفريات"
+                      alt={locale === 'ar' ? 'سفريات' : 'Safar Gate'}
                       width={150}
                       height={40}
                       priority
@@ -197,13 +199,12 @@ export default function CarrierLayout({ children }: CarrierLayoutProps) {
                   </div>
                 </SheetTrigger>
 
-                {/* محتوى Popup */}
                 <SheetContent
                   side="top"
                   className="max-w-sm mx-auto mt-12 p-6 rounded-2xl shadow-lg bg-background/95 backdrop-blur-md border border-muted-foreground/10"
                 >
                   <h3 className="text-lg font-semibold mb-4 text-center">
-                    تابعنا على السوشيال ميديا
+                    {t('followSocial')}
                   </h3>
                   <div className="flex flex-col gap-4">
                     <a
@@ -213,7 +214,7 @@ export default function CarrierLayout({ children }: CarrierLayoutProps) {
                       className="flex items-center gap-3 p-2 rounded-lg hover:bg-black hover:text-white transition-colors"
                     >
                       <Facebook />
-                      <span className="font-medium">فيسبوك</span>
+                      <span className="font-medium">{t('facebook')}</span>
                     </a>
 
                     <a
@@ -223,7 +224,7 @@ export default function CarrierLayout({ children }: CarrierLayoutProps) {
                       className="flex items-center gap-3 p-2 rounded-lg hover:bg-black hover:text-white transition-colors"
                     >
                       <Instagram />
-                      <span className="font-medium">إنستاجرام</span>
+                      <span className="font-medium">{t('instagram')}</span>
                     </a>
                   </div>
                 </SheetContent>
@@ -261,7 +262,7 @@ export default function CarrierLayout({ children }: CarrierLayoutProps) {
                       {unreadChatsCount > 9 ? "+9" : unreadChatsCount}
                     </Badge>
                   )}
-                  <span className="sr-only">الرسائل</span>
+                  <span className="sr-only">{t('messages')}</span>
                 </Link>
               </Button>
               <div className="hidden md:block">
@@ -300,7 +301,7 @@ export default function CarrierLayout({ children }: CarrierLayoutProps) {
                         className="flex items-center"
                       >
                         <User className="mr-2 h-4 w-4" />
-                        <span>ملف الناقل</span>
+                        <span>{t('carrierProfile')}</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
@@ -309,7 +310,7 @@ export default function CarrierLayout({ children }: CarrierLayoutProps) {
                       className="text-destructive focus:text-destructive cursor-pointer"
                     >
                       <LogOut className="mr-2 h-4 w-4" />
-                      <span>تسجيل الخروج</span>
+                      <span>{t('logout')}</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
