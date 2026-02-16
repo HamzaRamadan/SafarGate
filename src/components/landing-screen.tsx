@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/routing';
+import { LanguageSwitcher } from './language-switcher';
 
 export default function LandingScreen() {
   const t = useTranslations();
@@ -51,7 +52,10 @@ export default function LandingScreen() {
     <>
       <div className="relative flex min-h-screen w-full flex-col items-center justify-center p-4 overflow-hidden" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
         
-       
+       <div className="flex justify-end p-4">
+  <LanguageSwitcher />
+</div>
+
 
         {bgImage && (
           <Image

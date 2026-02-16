@@ -4,7 +4,6 @@ import {routing} from '@/i18n/routing';
 import './globals.css';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import AppProviders from '@/components/layout/app-providers';
-import { LanguageSwitcher } from '@/components/language-switcher';
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({locale}));
@@ -55,7 +54,6 @@ export default async function LocaleLayout({
         <NextIntlClientProvider messages={messages} locale={locale}>
           <AppProviders>
              {/* زرار تغيير اللغة في كل الصفحات */}
-            <LanguageSwitcher />
 
             {children}
           </AppProviders>

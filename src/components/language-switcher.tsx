@@ -17,10 +17,10 @@ export function LanguageSwitcher() {
   };
 
   return (
-    <div className={`fixed top-4 z-50 ${locale === 'ar' ? 'left-4' : 'right-4'}`}>
+    <div className={`top-4 z-50 ${locale === 'ar' ? 'left-4' : 'right-4'}`}>
       <Button
         onClick={switchLanguage}
-        variant="outline"
+        // variant="outline"
         size="sm"
         className="gap-2"
       >
