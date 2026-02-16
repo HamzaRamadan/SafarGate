@@ -401,6 +401,18 @@
     "confirmDeleteDesc": "This action will permanently delete your account. It cannot be undone. All your personal data, bookings, and trip history will be deleted.",
     "cancel": "Cancel",
     "confirmDeleteAction": "Yes, delete my account"
-  }
+  },
+  "askAi": {
+  "openSrOnly": "Ask AI Assistant",
+  "title": "Safar AI Assistant",
+  "welcome": "👋 Welcome!",
+  "carrierHelp": "I'm here to help you manage your trips.",
+  "travelerHelp": "I'm here to help you book your trips.",
+  "hint": "Ask me about rules, pricing, or how to use the platform.",
+  "error": "Sorry, a connection error occurred.",
+  "thinking": "Thinking...",
+  "placeholder": "Type your question here..."
+}
+
 
 }
