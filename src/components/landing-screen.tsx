@@ -110,6 +110,7 @@ export default function LandingScreen() {
                 </CardTitle>
                 <CardDescription className="text-gray-300 text-base">
                   {t('carrier.addTrip')}
+                  
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -117,7 +118,7 @@ export default function LandingScreen() {
                    <span className="sr-only">{t('nav.login')}</span>
                 </Link>
                 <Button variant="outline" className="w-full gap-2 border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-white text-lg h-12 group-hover:translate-x-1 transition-transform bg-transparent">
-                  {t('carrier.myTrips')} <ArrowLeft className="h-5 w-5" />
+                  {t('carrier.myTrip')} <ArrowLeft className="h-5 w-5" />
                 </Button>
               </CardContent>
             </Card>

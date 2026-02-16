@@ -64,14 +64,14 @@ export function BookingSummarySheet({ isOpen, onClose, onConfirm, tripDetails, c
 
             {/* الفاتورة الصفرية - The Zero Invoice Logic */}
             <div className="space-y-3">
-                <div className="flex justify-between items-center text-gray-600">
+                <div className="flex justify-between items-center font-extrabold text-white">
                     <span>رسوم خدمة المنصة</span>
                     <span className="font-mono line-through decorations-red-500 decoration-2">
                         {rule.travelerBookingFee.toFixed(2)} {rule.currency}
                     </span>
                 </div>
                 
-                <div className="flex justify-between items-center text-green-600 font-medium bg-green-50 p-2 rounded">
+                <div className="flex justify-between items-center text-green-800 font-bold bg-green-50 p-2 rounded">
                     <span className="flex items-center gap-1"><Ticket className="w-4 h-4" /> خصم الفترة الترويجية</span>
                     <span className="font-mono">
                         -{rule.travelerDiscount.toFixed(2)} {rule.currency}
