@@ -48,7 +48,6 @@ import {
   Link as LinkIcon, 
   Calendar as CalendarIcon 
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { format } from "date-fns";
 import { Label } from '@/components/ui/label';
 import {
@@ -63,7 +62,6 @@ import { combineDateAndTime } from '@/lib/formatters';
 import { useCountryPricing } from '@/hooks/use-country-pricing';
 import { useLocale } from 'next-intl';
 
-// --- Zod Schema Definitions ---
 const addTripSchema = z.object({
   origin: z.string().min(1, 'مدينة الانطلاق مطلوبة'),
   destination: z.string().min(1, 'مدينة الوصول مطلوبة'),
@@ -117,9 +115,9 @@ export function AddTripDialog({ isOpen, onOpenChange }: AddTripDialogProps) {
   });
 
   const countryCodeMap: { [key: string]: string } = {
-      jordan: 'JO', lebanon: 'LB', ksa: 'SA', syria: 'SY', iraq: 'IQ',
-      kuwait: 'KW', bahrain: 'BH', qatar: 'QA', uae: 'AE', oman: 'OM',
-      yemen: 'YE', iran: 'IR', turkey: 'TR',
+    jordan: 'JO', lebanon: 'LB', ksa: 'SA', syria: 'SY', iraq: 'IQ',
+    kuwait: 'KW', bahrain: 'BH', qatar: 'QA', uae: 'AE', oman: 'OM',
+    yemen: 'YE', iran: 'IR', turkey: 'TR',
   };
   const carrierCountryCode = (profile?.jurisdiction?.origin && countryCodeMap[profile.jurisdiction.origin]) || 'JO';
   const { rule: pricingRule } = useCountryPricing(carrierCountryCode);
@@ -141,14 +139,14 @@ export function AddTripDialog({ isOpen, onOpenChange }: AddTripDialogProps) {
       
       let autoConditions = "";
       if (profile.bagsPerSeat !== undefined) {
-          autoConditions += `- عدد الحقائب المسموح: ${profile.bagsPerSeat}\n`;
+        autoConditions += `- عدد الحقائب المسموح: ${profile.bagsPerSeat}\n`;
       }
       if (profile.numberOfStops !== undefined) {
-          if (profile.numberOfStops === 0) autoConditions += "- الرحلة مباشرة بدون توقف.\n";
-          else autoConditions += `- عدد التوقفات: ${profile.numberOfStops}\n`;
+        if (profile.numberOfStops === 0) autoConditions += "- الرحلة مباشرة بدون توقف.\n";
+        else autoConditions += `- عدد التوقفات: ${profile.numberOfStops}\n`;
       }
       if (profile.paymentInformation) {
-          autoConditions += `${profile.paymentInformation}\n`;
+        autoConditions += `${profile.paymentInformation}\n`;
       }
       defaultValues.conditions = autoConditions;
 
@@ -184,18 +182,17 @@ export function AddTripDialog({ isOpen, onOpenChange }: AddTripDialogProps) {
     }
     
     if (data.depositPercentage > 0 && (!profile.paymentInformation || profile.paymentInformation.trim().length < 5)) {
-        toast({
-            variant: "destructive",
-            title: "بيانات الدفع ناقصة",
-            description: "لطلب عربون، يجب عليك أولاً تحديد تفاصيل استلام الدفع (بنك/محفظة) في صفحة 'الشروط الدائمة'.",
-        });
-        return;
+      toast({
+        variant: "destructive",
+        title: "بيانات الدفع ناقصة",
+        description: "لطلب عربون، يجب عليك أولاً تحديد تفاصيل استلام الدفع (بنك/محفظة) في صفحة 'الشروط الدائمة'.",
+      });
+      return;
     }
 
     setIsSubmitting(true);
     try {
       const tripsCollection = collection(firestore, 'trips');
-      
       const combinedDepartureDateTime = combineDateAndTime(data.departureDate, data.departureTime);
 
       const tripData = {
@@ -249,204 +246,201 @@ export function AddTripDialog({ isOpen, onOpenChange }: AddTripDialogProps) {
             
             <Card className="bg-muted/30 border-accent/20">
               <CardContent className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div className='space-y-2'>
-                      <Label className='flex items-center gap-2 font-bold text-accent'><PlaneTakeoff className='h-4 w-4' /> من</Label>
-                        <Select onValueChange={setOriginCountry} value={originCountry}>
-                          <SelectTrigger className="bg-background"><SelectValue placeholder="اختر دولة الانطلاق" /></SelectTrigger>
+                <div className='space-y-2'>
+                  <Label className='flex items-center gap-2 font-bold text-accent'><PlaneTakeoff className='h-4 w-4' /> من</Label>
+                  <Select onValueChange={setOriginCountry} value={originCountry}>
+                    <SelectTrigger className="bg-background"><SelectValue placeholder="اختر دولة الانطلاق" /></SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(CITIES).map(([key, {name}]) => (
+                        <SelectItem key={key} value={key}>{name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormField control={form.control} name="origin" render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Select onValueChange={field.onChange} value={field.value} disabled={!originCountry}>
+                          <SelectTrigger className="bg-background"><SelectValue placeholder="اختر مدينة الانطلاق" /></SelectTrigger>
                           <SelectContent>
-                            {Object.entries(CITIES).map(([key, {name}]) => (
-                              <SelectItem key={key} value={key}>{name}</SelectItem>
+                            {originCountry && CITIES[originCountry as keyof typeof CITIES]?.cities.map(cityKey => (
+                              <SelectItem key={cityKey} value={cityKey}>{getCityName(cityKey, locale)}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
-                      <FormField control={form.control} name="origin" render={({ field }) => (
-                          <FormItem>
-                              <FormControl>
-                                  <Select onValueChange={field.onChange} value={field.value} disabled={!originCountry}>
-                                      <SelectTrigger className="bg-background"><SelectValue placeholder="اختر مدينة الانطلاق" /></SelectTrigger>
-                                      <SelectContent>
-                                      {originCountry && CITIES[originCountry as keyof typeof CITIES]?.cities.map(cityKey => (
-                                          <SelectItem key={cityKey} value={cityKey}>{getCityName(cityKey, locale)}</SelectItem>
-                                      ))}
-                                      </SelectContent>
-                                  </Select>
-                              </FormControl>
-                              <FormMessage />
-                          </FormItem>
-                        )}/>
-                  </div>
-                   <div className='space-y-2'>
-                      <Label className='flex items-center gap-2 font-bold text-accent'><PlaneLanding className='h-4 w-4' /> إلى</Label>
-                      <Select onValueChange={setDestinationCountry} value={destinationCountry}>
-                          <SelectTrigger className="bg-background"><SelectValue placeholder="اختر دولة الوصول" /></SelectTrigger>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}/>
+                </div>
+                <div className='space-y-2'>
+                  <Label className='flex items-center gap-2 font-bold text-accent'><PlaneLanding className='h-4 w-4' /> إلى</Label>
+                  <Select onValueChange={setDestinationCountry} value={destinationCountry}>
+                    <SelectTrigger className="bg-background"><SelectValue placeholder="اختر دولة الوصول" /></SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(CITIES).filter(([key]) => key !== originCountry).map(([key, {name}]) => (
+                        <SelectItem key={key} value={key}>{name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormField control={form.control} name="destination" render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Select onValueChange={field.onChange} value={field.value} disabled={!destinationCountry}>
+                          <SelectTrigger className="bg-background"><SelectValue placeholder="اختر مدينة الوصول" /></SelectTrigger>
                           <SelectContent>
-                          {Object.entries(CITIES).filter(([key]) => key !== originCountry).map(([key, {name}]) => (
-                              <SelectItem key={key} value={key}>{name}</SelectItem>
-                          ))}
+                            {destinationCountry && CITIES[destinationCountry as keyof typeof CITIES]?.cities.map(cityKey => (
+                              <SelectItem key={cityKey} value={cityKey}>{getCityName(cityKey, locale)}</SelectItem>
+                            ))}
                           </SelectContent>
-                      </Select>
-                       <FormField control={form.control} name="destination" render={({ field }) => (
-                          <FormItem>
-                              <FormControl>
-                                  <Select onValueChange={field.onChange} value={field.value} disabled={!destinationCountry}>
-                                      <SelectTrigger className="bg-background"><SelectValue placeholder="اختر مدينة الوصول" /></SelectTrigger>
-                                      <SelectContent>
-                                      {destinationCountry && CITIES[destinationCountry as keyof typeof CITIES]?.cities.map(cityKey => (
-                                          <SelectItem key={cityKey} value={cityKey}>{getCityName(cityKey, locale)}</SelectItem>
-                                      ))}
-                                      </SelectContent>
-                                  </Select>
-                              </FormControl>
-                              <FormMessage />
-                          </FormItem>
-                      )}/>
-                  </div>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}/>
+                </div>
               </CardContent>
             </Card>
 
             <Accordion type="single" collapsible className="w-full" defaultValue='details'>
               <AccordionItem value="details" className="border rounded-lg bg-muted/30">
                 <AccordionTrigger className="p-4 font-semibold text-sm hover:no-underline">
-                    <div className='flex items-center gap-2'>
-                        <Settings className='h-4 w-4'/>
-                        التفاصيل التشغيلية
-                    </div>
+                  <div className='flex items-center gap-2'>
+                    <Settings className='h-4 w-4'/>
+                    التفاصيل التشغيلية
+                  </div>
                 </AccordionTrigger>
                 <AccordionContent className="p-4 pt-0 space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField control={form.control} name="departureDate" render={({ field }) => (
-                        <FormItem className="flex flex-col">
-                            <FormLabel>تاريخ المغادرة</FormLabel>
-                            <FormControl>
-                                <div className="relative">
-                                    <Input 
-                                        type="date" 
-                                        className="bg-card block w-full pl-10 text-left" 
-                                        {...field}
-                                        value={field.value ? format(field.value, "yyyy-MM-dd") : ''}
-                                        onChange={(e) => {
-                                            const dateVal = e.target.value ? new Date(e.target.value) : undefined;
-                                            field.onChange(dateVal);
-                                        }}
-                                        min={new Date().toISOString().split('T')[0]}
-                                    />
-                                    <CalendarIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
-                                </div>
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
+                      <FormItem className="flex flex-col">
+                        <FormLabel>تاريخ المغادرة</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input 
+                              type="date" 
+                              className="bg-card block w-full pl-10 text-left" 
+                              {...field}
+                              value={field.value ? format(field.value, "yyyy-MM-dd") : ''}
+                              onChange={(e) => {
+                                const dateVal = e.target.value ? new Date(e.target.value) : undefined;
+                                field.onChange(dateVal);
+                              }}
+                              min={new Date().toISOString().split('T')[0]}
+                            />
+                            <CalendarIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}/>
-                     
-                     <FormField control={form.control} name="departureTime" render={({ field }) => (
-                        <FormItem className="flex flex-col">
-                            <FormLabel>وقت المغادرة</FormLabel>
-                            <FormControl>
-                                <Input type="time" className="bg-card" {...field} value={field.value ?? ''} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                     )}/>
+                    <FormField control={form.control} name="departureTime" render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>وقت المغادرة</FormLabel>
+                        <FormControl>
+                          <Input type="time" className="bg-card" {...field} value={field.value ?? ''} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}/>
                   </div>
-                  
-                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                     <FormField control={form.control} name="meetingPoint" render={({ field }) => (<FormItem><FormLabel className='flex items-center gap-1'><MapPin className="h-4 w-4"/>نقطة التجمع</FormLabel><FormControl><Input className="bg-card" placeholder="مثال: العبدلي - بجانب جت" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
-                     <FormField control={form.control} name="meetingPointLink" render={({ field }) => (<FormItem><FormLabel className='flex items-center gap-1'><LinkIcon className="h-4 w-4"/>رابط الموقع (اختياري)</FormLabel><FormControl><Input className="bg-card" dir="ltr" placeholder="https://maps.app.goo.gl/..." {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
-                   </div>
-                  
-                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <FormField control={form.control} name="availableSeats" render={({ field }) => (
-                          <FormItem>
-                              <FormLabel>عدد المقاعد المتاحة</FormLabel>
-                              <FormControl><Input className="bg-card" type="number" placeholder="e.g., 4" {...field} value={field.value ?? ''} /></FormControl>
-                              <FormMessage />
-                          </FormItem>
-                        )}/>
-                        <FormField control={form.control} name="estimatedDurationHours" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel className="flex items-center gap-1"><Clock className="h-4 w-4 text-primary"/>مدة الرحلة التقريبية (ساعة)</FormLabel>
-                                <FormControl><Input className="bg-card" type="number" placeholder="e.g., 8" {...field} value={field.value ?? ''} /></FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}/>
-                   </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField control={form.control} name="meetingPoint" render={({ field }) => (
+                      <FormItem><FormLabel className='flex items-center gap-1'><MapPin className="h-4 w-4"/>نقطة التجمع</FormLabel><FormControl><Input className="bg-card" placeholder="مثال: العبدلي - بجانب جت" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>
+                    )}/>
+                    <FormField control={form.control} name="meetingPointLink" render={({ field }) => (
+                      <FormItem><FormLabel className='flex items-center gap-1'><LinkIcon className="h-4 w-4"/>رابط الموقع (اختياري)</FormLabel><FormControl><Input className="bg-card" dir="ltr" placeholder="https://maps.app.goo.gl/..." {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>
+                    )}/>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField control={form.control} name="availableSeats" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>عدد المقاعد المتاحة</FormLabel>
+                        <FormControl><Input className="bg-card" type="number" placeholder="e.g., 4" {...field} value={field.value ?? ''} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}/>
+                    <FormField control={form.control} name="estimatedDurationHours" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-1"><Clock className="h-4 w-4 text-primary"/>مدة الرحلة التقريبية (ساعة)</FormLabel>
+                        <FormControl><Input className="bg-card" type="number" placeholder="e.g., 8" {...field} value={field.value ?? ''} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}/>
+                  </div>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
             
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="financials" className="border rounded-lg bg-muted/30">
-                 <AccordionTrigger className="p-4 font-semibold text-sm hover:no-underline">
-                    <div className='flex items-center gap-2'>
-                        <Wallet className='h-4 w-4'/>
-                        التفاصيل المالية
-                    </div>
+                <AccordionTrigger className="p-4 font-semibold text-sm hover:no-underline">
+                  <div className='flex items-center gap-2'>
+                    <Wallet className='h-4 w-4'/>
+                    التفاصيل المالية
+                  </div>
                 </AccordionTrigger>
-                 <AccordionContent className="p-4 pt-0 space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <FormField control={form.control} name="price" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>سعر المقعد</FormLabel>
-                                <FormControl><Input className="bg-card" type="number" placeholder="e.g., 50" {...field} value={field.value ?? ''} /></FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}/>
-                        <FormField control={form.control} name="currency" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>العملة</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    {...field} 
-                                    disabled 
-                                    className="bg-muted/50 text-muted-foreground font-mono cursor-not-allowed" 
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}/>
-                        <FormField control={form.control} name="depositPercentage" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>نسبة العربون</FormLabel>
-                                <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={String(field.value)}>
-                                    <FormControl><SelectTrigger><SelectValue placeholder="اختر نسبة" /></SelectTrigger></FormControl>
-                                    <SelectContent>{[0, 5, 10, 15, 20, 25, 30, 40, 50, 75, 100].map(p => <SelectItem key={p} value={String(p)}>{p}%</SelectItem>)}</SelectContent>
-                                </Select>
-                                <FormMessage />
-                            </FormItem>
-                        )}/>
-                    </div>
-                    <div className="p-2 bg-background/50 border rounded-md text-center text-sm font-bold text-primary">
-                        قيمة العربون للمقعد الواحد: {depositAmount} {form.watch('currency')}
-                    </div>
+                <AccordionContent className="p-4 pt-0 space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <FormField control={form.control} name="price" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>سعر المقعد</FormLabel>
+                        <FormControl><Input className="bg-card" type="number" placeholder="e.g., 50" {...field} value={field.value ?? ''} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}/>
+                    <FormField control={form.control} name="currency" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>العملة</FormLabel>
+                        <FormControl>
+                          <Input {...field} disabled className="bg-muted/50 text-muted-foreground font-mono cursor-not-allowed" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}/>
+                    <FormField control={form.control} name="depositPercentage" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>نسبة العربون</FormLabel>
+                        <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={String(field.value)}>
+                          <FormControl><SelectTrigger><SelectValue placeholder="اختر نسبة" /></SelectTrigger></FormControl>
+                          <SelectContent>{[0, 5, 10, 15, 20, 25, 30, 40, 50, 75, 100].map(p => <SelectItem key={p} value={String(p)}>{p}%</SelectItem>)}</SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}/>
+                  </div>
+                  <div className="p-2 bg-background/50 border rounded-md text-center text-sm font-bold text-primary">
+                    قيمة العربون للمقعد الواحد: {depositAmount} {form.watch('currency')}
+                  </div>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
             
-             <Accordion type="single" collapsible className="w-full">
+            <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="conditions" className="border rounded-lg bg-muted/30">
-                 <AccordionTrigger className="p-4 font-semibold text-sm hover:no-underline">
-                    <div className='flex items-center gap-2'>
-                        <ListChecks className='h-4 w-4'/>
-                        الشروط والأحكام (اختياري)
-                    </div>
+                <AccordionTrigger className="p-4 font-semibold text-sm hover:no-underline">
+                  <div className='flex items-center gap-2'>
+                    <ListChecks className='h-4 w-4'/>
+                    الشروط والأحكام (اختياري)
+                  </div>
                 </AccordionTrigger>
-                 <AccordionContent className="p-4 pt-0">
-                     <FormField control={form.control} name="conditions" render={({ field }) => (
-                        <FormItem>
-                            <FormControl>
-                                <Textarea
-                                    placeholder="مثال: ممنوع التدخين، حقيبة واحدة فقط لكل راكب..."
-                                    className="resize-none bg-card"
-                                    {...field}
-                                    maxLength={200}
-                                    value={field.value ?? ''}
-                                />
-                            </FormControl>
-                            <div className="text-xs text-muted-foreground text-left pt-1">
-                                {conditionsValue?.length || 0}/200
-                            </div>
-                            <FormMessage />
-                        </FormItem>
-                     )}/>
+                <AccordionContent className="p-4 pt-0">
+                  <FormField control={form.control} name="conditions" render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Textarea
+                          placeholder="مثال: ممنوع التدخين، حقيبة واحدة فقط لكل راكب..."
+                          className="resize-none bg-card"
+                          {...field}
+                          maxLength={200}
+                          value={field.value ?? ''}
+                        />
+                      </FormControl>
+                      <div className="text-xs text-muted-foreground text-left pt-1">
+                        {conditionsValue?.length || 0}/200
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}/>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
