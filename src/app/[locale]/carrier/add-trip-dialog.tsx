@@ -61,7 +61,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { CITIES, getCityName } from '@/lib/constants';
 import { combineDateAndTime } from '@/lib/formatters';
 import { useCountryPricing } from '@/hooks/use-country-pricing';
-
+import { useLocale } from 'next-intl';
 // --- Zod Schema Definitions ---
 const addTripSchema = z.object({
   origin: z.string().min(1, 'مدينة الانطلاق مطلوبة'),
@@ -96,7 +96,7 @@ export function AddTripDialog({ isOpen, onOpenChange }: AddTripDialogProps) {
   
   const [originCountry, setOriginCountry] = useState('');
   const [destinationCountry, setDestinationCountry] = useState('');
-
+const locale = useLocale();
   const form = useForm<AddTripFormValues>({
     resolver: zodResolver(addTripSchema),
     defaultValues: {
@@ -270,7 +270,9 @@ export function AddTripDialog({ isOpen, onOpenChange }: AddTripDialogProps) {
                                       <SelectTrigger className="bg-background"><SelectValue placeholder="اختر مدينة الانطلاق" /></SelectTrigger>
                                       <SelectContent>
                                       {originCountry && CITIES[originCountry as keyof typeof CITIES]?.cities.map(cityKey => (
-                                          <SelectItem key={cityKey} value={cityKey}>{getCityName(cityKey)}</SelectItem>
+                                          <SelectItem key={cityKey} value={cityKey}>
+  {getCityName(cityKey, locale)}
+</SelectItem>
                                       ))}
                                       </SelectContent>
                                   </Select>
@@ -296,7 +298,9 @@ export function AddTripDialog({ isOpen, onOpenChange }: AddTripDialogProps) {
                                       <SelectTrigger className="bg-background"><SelectValue placeholder="اختر مدينة الوصول" /></SelectTrigger>
                                       <SelectContent>
                                       {destinationCountry && CITIES[destinationCountry as keyof typeof CITIES]?.cities.map(cityKey => (
-                                          <SelectItem key={cityKey} value={cityKey}>{getCityName(cityKey)}</SelectItem>
+                                          <SelectItem key={cityKey} value={cityKey}>
+  {getCityName(cityKey, locale)}
+</SelectItem>
                                       ))}
                                       </SelectContent>
                                   </Select>
