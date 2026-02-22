@@ -1,4 +1,5 @@
 'use client';
+
 import { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -12,6 +13,7 @@ import { Input } from '../ui/input';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { Skeleton } from '../ui/skeleton';
 import { getCityName } from '@/lib/constants';
+import { useLocale } from 'next-intl';
 
 interface TransferRequestDialogProps {
   isOpen: boolean;
@@ -43,6 +45,8 @@ export function TransferRequestDialog({ isOpen, onOpenChange, trip }: TransferRe
     const { user } = useUser();
     const firestore = useFirestore();
     const { toast } = useToast();
+    const locale = useLocale(); // <- هنا
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedCarrier, setSelectedCarrier] = useState<UserProfile | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
@@ -69,11 +73,8 @@ export function TransferRequestDialog({ isOpen, onOpenChange, trip }: TransferRe
 
     const totalPassengers = useMemo(() => {
         if (!trip?.bookingIds) return 0;
-        // This is a simplification. A real implementation would query the bookings collection.
-        // For now, we assume bookingIds length is sufficient.
         return trip.bookingIds.length;
     }, [trip]);
-
 
     const handleSendRequest = async () => {
         if (!firestore || !user || !trip || !selectedCarrier) {
@@ -132,10 +133,18 @@ export function TransferRequestDialog({ isOpen, onOpenChange, trip }: TransferRe
                 <div className="py-4 space-y-4">
                     <div className="p-3 bg-muted rounded-lg border border-dashed text-sm">
                         <p className="font-bold flex items-center justify-between">
-                            <span>الرحلة: {getCityName(trip?.origin || '')} <ArrowRight className="inline h-3 w-3"/> {getCityName(trip?.destination || '')}</span>
-                            <span className="flex items-center gap-1"><Users className="h-4 w-4"/> {totalPassengers}</span>
+                            <span>
+                                الرحلة: {getCityName(trip?.origin || '', locale)} 
+                                <ArrowRight className="inline h-3 w-3"/> 
+                                {getCityName(trip?.destination || '', locale)}
+                            </span>
+                            <span className="flex items-center gap-1">
+                                <Users className="h-4 w-4"/> {totalPassengers}
+                            </span>
                         </p>
-                        <p className="text-xs text-muted-foreground pt-1">التاريخ: {trip?.departureDate ? new Date(trip.departureDate).toLocaleDateString('ar-SA') : '...'}</p>
+                        <p className="text-xs text-muted-foreground pt-1">
+                            التاريخ: {trip?.departureDate ? new Date(trip.departureDate).toLocaleDateString('ar-SA') : '...'}
+                        </p>
                     </div>
 
                     <div className="relative">
