@@ -14,6 +14,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { isFuture, isPast } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { QRDialog } from './qr-dialog';
+import { useLocale } from 'next-intl';
 
 interface HeroTicketProps {
     trip: Trip;
@@ -27,10 +28,10 @@ type TicketState = 'scheduled' | 'active' | 'archived';
 
 export const HeroTicket = ({ trip, booking, onRateTrip, onCancelBooking, onMessageCarrier }: HeroTicketProps) => {
     const firestore = useFirestore();
+    const locale = useLocale();
     const [ticketState, setTicketState] = useState<TicketState>('scheduled');
-    const [isQROpen, setIsQROpen] = useState(false); // [SC-196] QR State Injection
+    const [isQROpen, setIsQROpen] = useState(false);
     
-    // Protocol 88: Single Read for Carrier Identity
     const carrierProfileRef = useMemo(() => {
         if (!firestore || !trip.carrierId) return null;
         return doc(firestore, 'users', trip.carrierId);
@@ -38,19 +39,15 @@ export const HeroTicket = ({ trip, booking, onRateTrip, onCancelBooking, onMessa
     
     const { data: liveCarrier, isLoading } = useDoc<UserProfile>(carrierProfileRef);
 
-    // Time Awareness Engine (Client-Side Only)
     useEffect(() => {
         const checkStatus = () => {
             const departureDate = new Date(trip.departureDate);
-            // 1. Force Archive if status is final
             if (booking.status === 'Completed' || booking.status === 'Cancelled' || trip.status === 'Completed' || trip.status === 'Cancelled') {
                 setTicketState('archived');
             } 
-            // 2. Check Time: If past departure, it's Active (unless completed)
             else if (isPast(departureDate)) {
                 setTicketState('active');
             } 
-            // 3. Otherwise, it's Scheduled
             else {
                 setTicketState('scheduled');
             }
@@ -58,11 +55,9 @@ export const HeroTicket = ({ trip, booking, onRateTrip, onCancelBooking, onMessa
 
         checkStatus();
         
-        // Smart Timer: Switch to 'active' exactly when departure time hits
         const departureDate = new Date(trip.departureDate);
         if (isFuture(departureDate)) {
             const msUntilDeparture = departureDate.getTime() - Date.now();
-            // Only set timer if it's within a reasonable window (e.g., less than 24 hours) to save memory
             if (msUntilDeparture < 86400000) { 
                 const timer = setTimeout(() => {
                     setTicketState('active');
@@ -78,7 +73,6 @@ export const HeroTicket = ({ trip, booking, onRateTrip, onCancelBooking, onMessa
     const depositAmount = (booking.totalPrice * ((trip.depositPercentage || 20) / 100));
     const remainingAmount = booking.totalPrice - depositAmount;
 
-    // Visual Sovereignty Configuration
     const stateStyles = {
         scheduled: {
             card: "border-primary",
@@ -87,13 +81,13 @@ export const HeroTicket = ({ trip, booking, onRateTrip, onCancelBooking, onMessa
             badgeText: "تذكرة مؤكدة"
         },
         active: {
-            card: "border-green-500 animate-pulse ring-1 ring-green-500/50", // Added ring for emphasis
+            card: "border-green-500 animate-pulse ring-1 ring-green-500/50",
             header: "from-green-600 to-green-800",
             badge: "bg-green-500 animate-pulse",
             badgeText: "الرحلة جارية الآن 🚌"
         },
         archived: {
-            card: "border-muted-foreground/30 grayscale opacity-90", // Reduced opacity for archived feel
+            card: "border-muted-foreground/30 grayscale opacity-90",
             header: "from-slate-700 to-slate-900",
             badge: "bg-muted-foreground",
             badgeText: booking.status === 'Cancelled' ? 'ملغاة' : 'مكتملة'
@@ -130,7 +124,7 @@ export const HeroTicket = ({ trip, booking, onRateTrip, onCancelBooking, onMessa
                     <div className="flex justify-between items-start">
                         <div>
                             <Badge variant="default" className={cn("w-fit mb-2 transition-colors duration-500 shadow-sm border-0", currentStyle.badge)}>{currentStyle.badgeText}</Badge>
-                            <CardTitle className="pt-1 text-xl">{getCityName(trip.origin)} <span className="text-white/70 mx-1">◄</span> {getCityName(trip.destination)}</CardTitle>
+                            <CardTitle className="pt-1 text-xl">{getCityName(trip.origin, locale)} <span className="text-white/70 mx-1">◄</span> {getCityName(trip.destination, locale)}</CardTitle>
                         </div>
                     </div>
                 </CardHeader>
@@ -161,8 +155,8 @@ export const HeroTicket = ({ trip, booking, onRateTrip, onCancelBooking, onMessa
                     <div className="p-3 bg-background/50 backdrop-blur-sm rounded-lg border border-primary/20 space-y-2 shadow-sm">
                         <p className="font-bold text-xs flex items-center gap-1 text-muted-foreground"><MapPin className="h-4 w-4 text-primary"/> نقطة وتوقيت الانطلاق</p>
                         <div className="text-xs space-y-1">
-                            <div className="flex justify-between"><span>التاريخ:</span> <span className="font-bold">{formatDate(trip.departureDate, 'd MMM yyyy')}</span></div>
-                            <div className="flex justify-between"><span>الوقت:</span> <span className="font-bold">{formatDate(trip.departureDate, 'h:mm a')}</span></div>
+                            <div className="flex justify-between"><span>التاريخ:</span> <span className="font-bold">{formatDate(trip.departureDate, 'd MMM yyyy', locale)}</span></div>
+                            <div className="flex justify-between"><span>الوقت:</span> <span className="font-bold">{formatDate(trip.departureDate, 'h:mm a', locale)}</span></div>
                             <div className="flex justify-between mt-2 pt-2 border-t border-dashed border-primary/20"><span>المكان:</span> <span className="font-bold">{trip.meetingPoint}</span></div>
                         </div>
                         {trip.meetingPointLink && <a href={trip.meetingPointLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 font-medium text-xs flex items-center gap-1 hover:underline mt-1"><LinkIcon className="h-3 w-3" /> عرض على الخريطة</a>}
@@ -184,14 +178,12 @@ export const HeroTicket = ({ trip, booking, onRateTrip, onCancelBooking, onMessa
                         </Button>
                     )}
 
-                    {/* [SC-195] Active State Actions */}
                     {ticketState === 'active' && (
                         <Button variant="outline" className="w-full border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700">
                             <Share2 className="ml-2 h-4 w-4" /> مشاركة موقعي (أمان)
                         </Button>
                     )}
 
-                    {/* [SC-195] Archived State Actions */}
                     {ticketState === 'archived' && booking.status === 'Completed' && onRateTrip && (
                         <Button variant="secondary" className="w-full bg-slate-200 hover:bg-slate-300 text-slate-800" onClick={() => onRateTrip(trip)}>
                             <Flag className="ml-2 h-4 w-4" /> تقييم الرحلة
@@ -213,7 +205,7 @@ export const HeroTicket = ({ trip, booking, onRateTrip, onCancelBooking, onMessa
                     bookingId: booking.id,
                     passengerName: booking.passengersDetails?.[0]?.name || 'مسافر',
                     seats: booking.seats,
-                    pickup: trip.meetingPoint || getCityName(trip.origin) // Fallback Logic
+                    pickup: trip.meetingPoint || getCityName(trip.origin, locale)
                 }}
             />
         </>
