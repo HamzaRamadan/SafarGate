@@ -23,7 +23,7 @@ import { formatDate } from '@/lib/formatters';
 import { useAdmin } from '@/hooks/use-admin';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
-
+import { useLocale } from 'next-intl';
 // Define the structure of an admin log entry
 interface AdminLog {
     id: string;
@@ -42,7 +42,7 @@ export default function AuditLogsPage() {
   const firestore = useFirestore();
   const { isAdmin, isLoading: isAdminLoading } = useAdmin();
   const router = useRouter();
-
+const locale = useLocale();
   const logsQuery = useMemo(() => {
     if (!firestore || !isAdmin) return null;
     
@@ -56,10 +56,10 @@ export default function AuditLogsPage() {
   const { data: logs, isLoading: isLoadingLogs } = useCollection<AdminLog>(logsQuery);
   const isLoading = isAdminLoading || isLoadingLogs;
   
-  const safeFormatTimestamp = (timestamp: any) => {
-    if (!timestamp?.toDate) return 'غير متوفر';
-    return formatDate(timestamp.toDate(), 'd MMMM yyyy, h:mm:ss a');
-  };
+ const safeFormatTimestamp = (timestamp: any) => {
+  if (!timestamp?.toDate) return 'غير متوفر';
+  return formatDate(timestamp.toDate(), 'd MMMM yyyy, h:mm:ss a', locale);
+};
 
   const getActionBadge = (log: AdminLog) => {
     const isFreeze = log.action === 'FREEZE';
