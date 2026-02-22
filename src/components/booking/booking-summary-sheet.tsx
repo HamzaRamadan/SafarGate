@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Receipt, ShieldCheck, Ticket } from "lucide-react";
 import { useCountryPricing } from "@/hooks/use-country-pricing";
+import type { Trip } from '@/lib/data';
 
 interface BookingSummaryProps {
   isOpen: boolean;
@@ -16,6 +17,9 @@ interface BookingSummaryProps {
     destination: string;
     carrierName: string;
   };
+    trip: Trip; 
+  confirmedEmail: string;   
+
   countryCode?: string; // Default 'JO'
 }
 

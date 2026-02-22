@@ -17,7 +17,7 @@ import { arSA } from 'date-fns/locale';
  * @param formatString The desired format string (defaults to 'd MMMM yyyy').
  * @returns The formatted date string, or an empty string if the date is invalid.
  */
-export const formatDate = (date: Date | number | string, formatString: string = 'd MMMM yyyy'): string => {
+export const formatDate = (date: Date | number | string, formatString: string = 'd MMMM yyyy', locale: string): string => {
   if (!date) return '';
   try {
     const dateObj = new Date(date);

@@ -28,8 +28,6 @@ import { errorEmitter, FirestorePermissionError } from '@/firebase';
 
 /**
  * 1. الرادار (Check Only)
- * وظيفتها: استطلاع فقط. لا تنشئ حساباً، لا تحجز UID، لا تلمس Auth.
- * النتيجة: صفر تكديس.
  */
 export async function checkUserExistence(db: Firestore, phone: string) {
   // Bypass for test traveler
@@ -49,31 +47,30 @@ export async function checkUserExistence(db: Firestore, phone: string) {
     const snapshot = await getDocs(q);
 
     if (!snapshot.empty) {
-      return { exists: true, data: snapshot.docs[0].data() };
+      // ✅ مهم: نرجع الـ id مع البيانات عشان نقدر نربط الـ uid الجديد بالـ document القديم
+      return { 
+        exists: true, 
+        data: { id: snapshot.docs[0].id, ...snapshot.docs[0].data() } 
+      };
     }
     return { exists: false, data: null };
   } catch (error) {
     console.error("Check Error:", error);
-    // في حالة الخطأ نعتبره غير موجود مؤقتاً لتجنب الإغلاق
     return { exists: false, data: null };
   }
 }
 
 /**
  * 2. التسجيل الفعلي (Execution)
- * وظيفتها: تُستدعى حصراً للمستخدم الجديد بعد أن يكتب اسمه.
  */
 export async function registerNewUser(db: Firestore, auth: Auth, phone: string, name: string, role: string) {
   try {
-    // SC-113: Operation Stop the Bleeding (The Fix)
-    // Check if we already have a session, otherwise create one.
     let user = auth.currentUser;
     if (!user) {
       const result = await signInAnonymously(auth);
       user = result.user;
     }
 
-    // Guard against a failed session creation.
     if (!user) {
         throw new Error("Authentication failed: Could not get or create a user session.");
     }
@@ -159,7 +156,6 @@ export async function signInWithEmail(auth: Auth, firestore: Firestore, email: s
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     return userCredential;
   } catch (error: any) {
-    // Auto-create owner account if it doesn't exist
     if (error.code === 'auth/user-not-found') {
         toast({ title: "المستخدم غير موجود", description: "جاري إنشاء حساب مالك جديد..." });
         try {
@@ -173,7 +169,7 @@ export async function signInWithEmail(auth: Auth, firestore: Firestore, email: s
                 firstName: firstName,
                 lastName: 'Owner',
                 email: email,
-                role: 'owner', // Set role to owner
+                role: 'owner',
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
             });
@@ -224,8 +220,7 @@ export async function initiateGoogleSignIn(auth: Auth, firestore: Firestore): Pr
         lastName: lastNameParts.join(' '),
         email: user.email!,
         phoneNumber: user.phoneNumber || '',
-        role: 'traveler' // Default role for new Google sign-ups
-        ,
+        role: 'traveler',
         fullName: ''
       };
       await setDoc(userRef, { ...newUserProfile, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });

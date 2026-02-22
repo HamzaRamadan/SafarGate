@@ -124,14 +124,14 @@ export default function LoginPhone() {
                 )}
               </Button>
 
-              <Button
+              {/* <Button
                 variant="outline"
                 className="w-full"
                 onClick={resetToPhoneStep}
                 disabled={loading}
               >
                 {locale === 'ar' ? 'استخدام رقم آخر' : 'Use another number'}
-              </Button>
+              </Button> */}
             </div>
           </div>
         </div>

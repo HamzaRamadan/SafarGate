@@ -77,6 +77,7 @@ export type UserProfile = {
 };
 
 export type Trip = {
+  departureTime: string;
   id: string;
   userId: string;
   carrierId?: string;

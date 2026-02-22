@@ -53,7 +53,7 @@ const CITY_NAMES: { [key: string]: string } = {
   istanbul: 'إسطنبول', ankara: 'أنقرة', izmir: 'إزمير', antalya: 'أنطاليا',
 };
 
-export function getCityName(cityKey: string): string {
+export function getCityName(cityKey: string, locale: string): string {
   if (!cityKey) return 'غير محدد';
   const lowerKey = cityKey.toLowerCase().trim();
   return CITY_NAMES[lowerKey] || cityKey;

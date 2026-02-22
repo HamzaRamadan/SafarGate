@@ -54,8 +54,8 @@
     "opportunityHub": "Opportunity Hub",
     "dynamicOffers": "Dynamic Offers",
     "scheduledTrips": "Scheduled Trips",
-    "myTrips":"My Trips",
-    "myTrip":"My Trip",
+    "myTrips": "My Trips",
+    "myTrip": "My Trip",
     "addTrip": "I own a vehicle and am looking for passengers",
     "bookings": "Bookings",
     "editTrip": "Edit Trip",
@@ -111,32 +111,48 @@
     "login": "Admin Login"
   },
   "trip": {
-    "searchResults": "Search Results",
-    "noTripsFound": "No trips found",
-    "tripFrom": "From",
-    "tripTo": "To",
-    "departureDate": "Departure Date",
+    "from": "From",
     "departureTime": "Departure Time",
-    "arrivalTime": "Arrival Time",
-    "duration": "Duration",
+        "departureDate": " departureDate ",
+
+    "vehicle": "Vehicle",
+    "bus": "Bus",
+    "car": "Car",
+    "type": "Type",
+    "available": "Available",
     "price": "Price",
-    "availableSeats": "Available Seats",
-    "bookSeats": "Book Seats",
     "carrier": "Carrier",
-    "tripDetails": "Trip Details"
+    "duration": "Duration",
+    "hours": "Hours",
+    "stops": "Stops",
+    "meetingPoint": "Meeting Point",
+    "bagsPerSeat": "Bags / Seat",
+    "deposit": "Deposit",
+    "notSpecified": "Not specified",
+    "status": {
+      "planned": "Planned",
+      "In-Transit": "In Transit",
+      "Completed": "Completed"
+    }
   },
   "booking": {
-    "title": "Booking",
-    "bookingConfirmation": "Booking Confirmation",
-    "passengerInfo": "Passenger Information",
-    "numberOfSeats": "Number of Seats",
-    "totalPrice": "Total Price",
-    "confirmBooking": "Confirm Booking",
-    "bookingSuccess": "Booking Successful",
-    "bookingFailed": "Booking Failed",
-    "myBookings": "My Bookings",
-    "bookingDetails": "Booking Details",
-    "cancelBooking": "Cancel Booking"
+    "title": "Booking Summary",
+    "description": "Review trip details before confirming.",
+    "route": "Route:",
+    "carrier": "Carrier:",
+    "ticketPrice": "Ticket Price",
+    "duration": "Trip Duration",
+    "hours": "Hours",
+    "stops": "Stops",
+    "meetingPoint": "Meeting Point",
+    "availableSeats": "Available Seats",
+    "deposit": "Deposit",
+    "platformFee": "Platform Fee",
+    "totalDue": "Total Due Now",
+    "confirm": "Confirm Booking",
+    "pricingError": "Error loading pricing",
+    "notSpecified": "Not specified",
+    "remainingAmount": "Remaining amount ({amount} {currency}) is paid to the carrier at meeting"
   },
   "profile": {
     "title": "Profile",
@@ -214,7 +230,6 @@
     "requestPublishedDesc": "Please follow your request status in 'My Bookings'.",
     "followRequest": "Follow Request"
   },
-
   "carrierLayout": {
     "menu": "Menu",
     "command": "Command",
@@ -232,7 +247,7 @@
     "activeTrip": "You already have an active trip",
     "activeTripDesc": "Platform policy does not allow more than one active trip at the same time."
   },
-   "subscriptionCard": {
+  "subscriptionCard": {
     "active": {
       "title": "Free Trial Active",
       "message": "You are enjoying your free launch period. Move forward with confidence!",
@@ -253,7 +268,7 @@
     "totalDays": "Out of {total} days",
     "renewNow": "Renew Subscription Now"
   },
-   "carrierTripsPage": {
+  "carrierTripsPage": {
     "title": "Manage Your Active Trip",
     "description": "Manage your currently active trip, edit its details, and monitor confirmed passengers."
   },
@@ -274,7 +289,7 @@
     "cancel": "Back",
     "continue": "Continue"
   },
-   "carrierArchive": {
+  "carrierArchive": {
     "title": "Archive & Records",
     "myCompleted": "My Completed Trips",
     "myTransferred": "Trips I Transferred",
@@ -313,13 +328,14 @@
       "officeName": "Example: Al Noor Transport Office",
       "officePhone": "07xxxxxxxx",
       "sidePanelNumber": "Enter the approved side panel number",
-      "paymentInfo": "Example: Zain Cash 079XXXXXXX or IBAN. Only shown to passenger after booking confirmation.","vehicleAndPlateImages": "Vehicle & Plate Images",
-  "vehicleImage": "Vehicle Image",
-  "vehicleImagePlaceholder": "Click or drag to upload vehicle image",
-  "vehicleImagePreviewAlt": "Vehicle image preview",
-  "plateImage": "Plate Image",
-  "plateImagePlaceholder": "Click or drag to upload plate image",
-  "plateImagePreviewAlt": "Plate image preview"
+      "paymentInfo": "Example: Zain Cash 079XXXXXXX or IBAN. Only shown to passenger after booking confirmation.",
+      "vehicleAndPlateImages": "Vehicle & Plate Images",
+      "vehicleImage": "Vehicle Image",
+      "vehicleImagePlaceholder": "Click or drag to upload vehicle image",
+      "vehicleImagePreviewAlt": "Vehicle image preview",
+      "plateImage": "Plate Image",
+      "plateImagePlaceholder": "Click or drag to upload plate image",
+      "plateImagePreviewAlt": "Plate image preview"
     }
   },
   "opportunities": {
@@ -336,7 +352,7 @@
     "generalMarketTitle": "General Requests Market",
     "generalMarketDescription": "Browse all available opportunities from the general market and submit your competitive offers."
   },
-   "bookingRequests": {
+  "bookingRequests": {
     "inboxCleanTitle": "Inbox is clean",
     "inboxCleanDesc": "No pending requests at the moment. Enjoy your time or check the market for passengers.",
     "emergencyTransfers": "Emergency Transfer Requests",
@@ -374,7 +390,7 @@
     "saveErrorTitle": "Error",
     "saveErrorDescription": "Failed to save data"
   },
-   "Profile": {
+  "Profile": {
     "identitySettings": "Identity Settings",
     "identitySettingsDesc": "Manage your basic account information.",
     "firstName": "First Name",
@@ -387,32 +403,146 @@
     "phoneNumberPlaceholder": "Your phone number",
     "saveChanges": "Save Changes",
     "changePhoto": "Change Photo",
-    "comingSoon": { "title": "Coming soon", "desc": "Profile image upload will be available soon." },
-    "profileUpdated": { "title": "Profile updated", "description": "Your changes have been saved successfully." },
+    "comingSoon": {
+      "title": "Coming soon",
+      "desc": "Profile image upload will be available soon."
+    },
+    "profileUpdated": {
+      "title": "Profile updated",
+      "description": "Your changes have been saved successfully."
+    },
     "dangerZone": "Danger Zone",
     "dangerZoneDesc": "These actions are permanent and cannot be undone. Please proceed with caution.",
     "dangerZoneWarning": "Once you delete your account, all personal data and booking history will be permanently lost.",
     "deleteAccount": "Delete Account Permanently",
-    "deleteSuccess": { "title": "Account deleted", "description": "Hope to see you again soon." },
-    "deleteError": { "title": "Error", "description": "User or Firebase services not found." },
-    "deleteRequiresRecentLogin": { "title": "Auth deletion failed", "description": "This operation requires recent login. Your data was deleted; please logout and login again to complete deletion." },
-    "deleteFailed": { "title": "Account deletion failed", "description": "An error occurred while trying to delete your account." },
+    "deleteSuccess": {
+      "title": "Account deleted",
+      "description": "Hope to see you again soon."
+    },
+    "deleteError": {
+      "title": "Error",
+      "description": "User or Firebase services not found."
+    },
+    "deleteRequiresRecentLogin": {
+      "title": "Auth deletion failed",
+      "description": "This operation requires recent login. Your data was deleted; please logout and login again to complete deletion."
+    },
+    "deleteFailed": {
+      "title": "Account deletion failed",
+      "description": "An error occurred while trying to delete your account."
+    },
     "confirmDeleteTitle": "Are you sure you want to delete your account?",
     "confirmDeleteDesc": "This action will permanently delete your account. It cannot be undone. All your personal data, bookings, and trip history will be deleted.",
     "cancel": "Cancel",
     "confirmDeleteAction": "Yes, delete my account"
   },
   "askAi": {
-  "openSrOnly": "Ask AI Assistant",
-  "title": "Safar AI Assistant",
-  "welcome": "👋 Welcome!",
-  "carrierHelp": "I'm here to help you manage your trips.",
-  "travelerHelp": "I'm here to help you book your trips.",
-  "hint": "Ask me about rules, pricing, or how to use the platform.",
-  "error": "Sorry, a connection error occurred.",
-  "thinking": "Thinking...",
-  "placeholder": "Type your question here..."
-}
-
-
+    "openSrOnly": "Ask AI Assistant",
+    "title": "Safar AI Assistant",
+    "welcome": "👋 Welcome!",
+    "carrierHelp": "I'm here to help you manage your trips.",
+    "travelerHelp": "I'm here to help you book your trips.",
+    "hint": "Ask me about rules, pricing, or how to use the platform.",
+    "error": "Sorry, a connection error occurred.",
+    "thinking": "Thinking...",
+    "placeholder": "Type your question here..."
+  },
+  "scheduledTripCard": {
+    "new": "New",
+    "ratings": "ratings",
+    "deposit": "Deposit",
+    "terms": "Terms",
+    "noSeats": "No seats available",
+    "bookSeat": "Book Seat",
+    "closure": "Trip Closure Actions",
+    "cancel": "Cancel Booking",
+    "messageCarrier": "Message Carrier"
+  },
+  "bookingDialog": {
+    "title": "Booking Confirmation: Passenger Details",
+    "description": "You are about to book {seats} seat(s) for trip {origin} - {destination}.",
+    "passenger": "Passenger",
+    "fullName": "Full Name (as in document)",
+    "fullNamePlaceholder": "Enter full name",
+    "nationality": "Nationality",
+    "nationalityPlaceholder": "Example: Jordanian",
+    "documentNumber": "Passport/ID Number",
+    "documentPlaceholder": "Enter document number",
+    "passengerType": "Passenger Type",
+    "types": {
+      "adult": "Adult",
+      "minor": "Minor",
+      "infant": "Infant"
+    },
+    "conditionsTitle": "Carrier & Trip Conditions:",
+    "noConditions": "No additional conditions declared by the carrier.",
+    "agreement": "I confirm that I have read and agreed to the trip conditions above.",
+    "cancel": "Cancel",
+    "submit": "Send Request to Carrier",
+    "sending": "Sending...",
+    "errors": {
+      "incompleteTitle": "Incomplete Data",
+      "incompleteDescription": "Please enter all required passenger details (name, nationality, document number)."
+    }
+  },
+  "history": {
+    "title": "Booking Operations Room",
+    "description": "Track all your requests and active bookings.",
+    "nav": {
+      "home": "Home",
+      "chats": "Chats"
+    },
+    "empty": {
+      "noBookings": "There are no active bookings.",
+      "goToDashboard": "Go to Dashboard"
+    },
+    "toasts": {
+      "offerAcceptedTitle": "Offer Accepted!",
+      "offerAcceptedDesc": "Waiting for final carrier confirmation.",
+      "paymentConfirmedTitle": "Booking Confirmed!",
+      "paymentConfirmedDesc": "Your seat has been secured. Have a safe trip.",
+      "withdrawSuccessTitle": "Request Withdrawn",
+      "withdrawSuccessDesc": "Your request has been removed from the marketplace.",
+      "cancelledTitle": "Cancellation Documented",
+      "cancelledDesc": "The booking has been cancelled and financially documented."
+    },
+    "errors": {
+      "error": "Error",
+      "acceptOfferFailed": "Failed to accept offer.",
+      "paymentFailed": "Payment confirmation failed",
+      "withdrawFailed": "Failed to withdraw request",
+      "cancelFailed": "Cancellation failed"
+    },
+    "system": {
+      "cancellationMessage": "⚠️ Booking cancelled by traveler. Deposit status: {refundStatus}.",
+      "late": "Non-refundable (Late cancellation)",
+      "early": "Refundable (Early cancellation)"
+    }
+  },
+  "statusCards": {
+    "loading": "Loading...",
+    "withCarrier": "With carrier: {name}",
+    "pendingPayment": {
+      "badge": "Awaiting Deposit Payment",
+      "cta": "The carrier approved your request. Click here to complete payment and confirm your booking."
+    },
+    "pendingConfirmation": {
+      "badge": "Awaiting Carrier Confirmation",
+      "seats": "Number of Seats:",
+      "totalPrice": "Total Price:"
+    },
+    "awaitingOffers": {
+      "badge": "Awaiting Offers",
+      "publishedInMarket": "Your request is now published in the market",
+      "matchingTrips": "We found {count} scheduled trip(s) matching your request! Click here to book now.",
+      "offersReceived": "{count} offer(s) received. Click to review.",
+      "noOffers": "You will be notified as soon as new offers arrive.",
+      "withdraw": "Withdraw Request from Market"
+    },
+    "stagnation": {
+      "title": "Request Is Taking Longer Than Usual",
+      "description": "An hour has passed with no offers. The price may be too low or no vehicles are available.",
+      "searchScheduled": "Search Scheduled Trips"
+    }
+  }
 }
