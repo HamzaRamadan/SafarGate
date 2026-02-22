@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { getCityName } from '@/lib/constants';
 import { formatDate } from '@/lib/formatters';
+import { useLocale } from 'next-intl';
 
 interface RequestCardProps {
     tripRequest: Trip;
@@ -14,6 +15,7 @@ interface RequestCardProps {
 }
 
 export function RequestCard({ tripRequest, onOffer }: RequestCardProps) {
+    const locale = useLocale();
     const isDirectRequest = tripRequest.requestType === 'Direct';
 
     return (
@@ -32,15 +34,15 @@ export function RequestCard({ tripRequest, onOffer }: RequestCardProps) {
                 )}
                 
                 <div className="flex items-center gap-2 font-bold text-lg text-foreground">
-                    <span>{getCityName(tripRequest.origin)}</span>
+                    <span>{getCityName(tripRequest.origin, locale)}</span>
                     <ArrowRight className="h-5 w-5 text-primary" />
-                    <span>{getCityName(tripRequest.destination)}</span>
+                    <span>{getCityName(tripRequest.destination, locale)}</span>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground mt-2">
                     <div className="flex items-center gap-1 font-semibold">
                         <Calendar className="h-3.5 w-3.5" />
-                        <span>{formatDate(tripRequest.departureDate, 'd MMMM')}</span>
+                        <span>{formatDate(tripRequest.departureDate, 'd MMMM', locale)}</span>
                     </div>
                     <div className="flex items-center gap-1 font-semibold">
                         <Users className="h-3.5 w-3.5" />
