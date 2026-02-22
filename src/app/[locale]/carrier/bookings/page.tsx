@@ -14,7 +14,7 @@ import { getCityName } from '@/lib/constants';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { OfferDialog } from '@/components/carrier/offer-dialog';
 import { useOfferDialog } from '@/hooks/use-offer-dialog';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 // --- Helper Component: FromCarrierInfo ---
 function FromCarrierInfo({ carrierId }: { carrierId: string }) {
@@ -49,7 +49,8 @@ export default function BookingRequestsPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const t = useTranslations('bookingRequests');
-  
+  const locale = useLocale();
+
   const {
     selectedTrip,
     isDialogOpen,
@@ -192,7 +193,7 @@ export default function BookingRequestsPage() {
                         <div key={req.id} className="border-2 border-red-100 bg-red-50/50 rounded-xl p-4 space-y-3 shadow-sm">
                             <FromCarrierInfo carrierId={req.fromCarrierId} />
                             <div className="text-xs text-muted-foreground bg-background/60 p-2 rounded">
-                                <p><strong>{t('tripLabel')}:</strong> {getCityName(req.tripDetails.origin)} ➝ {getCityName(req.tripDetails.destination)}</p>
+                                <p><strong>{t('tripLabel')}:</strong> {getCityName(req.tripDetails.origin, locale)} ➝ {getCityName(req.tripDetails.destination, locale)}</p>
                                 <p><strong>{t('passengersLabel')}:</strong> {req.tripDetails.passengerCount}</p>
                                 <p><strong>{t('dateLabel')}:</strong> {new Date(req.tripDetails.departureDate).toLocaleDateString()}</p>
                             </div>
@@ -218,7 +219,7 @@ export default function BookingRequestsPage() {
                                 <span className="text-xs text-muted-foreground">{t('waitingOffer')}</span>
                             </div>
                             <div className="text-sm font-medium mb-4">
-                                {getCityName(trip.origin)} ⬅ {getCityName(trip.destination)}
+                                {getCityName(trip.origin, locale)} ⬅ {getCityName(trip.destination, locale)}
                             </div>
                             <Button className="w-full bg-blue-600 text-white hover:bg-blue-700" onClick={() => openOfferDialog(trip)}>
                                 تقديم عرض سعر
