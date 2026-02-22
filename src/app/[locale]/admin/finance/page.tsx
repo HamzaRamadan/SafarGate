@@ -13,7 +13,7 @@ import { Loader2, CheckCircle, XCircle, Eye, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/formatters';
 import type { TopupRequest } from '@/lib/data';
-
+import { useLocale } from 'next-intl';
 export default function AdminFinancePage() {
   const { data: requests, isLoading } = useCollection(
     query(
@@ -27,7 +27,7 @@ export default function AdminFinancePage() {
   const { toast } = useToast();
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [processingRejectId, setProcessingRejectId] = useState<string | null>(null);
-
+const locale = useLocale();
   const handleApprove = async (request: TopupRequest) => {
     if (!functions) return;
     if (!confirm(`هل أنت متأكد من الموافقة على شحن ${request.amount} د.أ للناقل ${request.carrierName}؟`)) return;
@@ -122,7 +122,9 @@ export default function AdminFinancePage() {
                                 </TableCell>
                                 <TableCell>{req.method}</TableCell>
                                 <TableCell className="text-slate-500 text-sm">
-                                    {req.createdAt?.toDate ? formatDate(req.createdAt.toDate()) : 'الآن'}
+                                   {req.createdAt?.toDate
+  ? formatDate(req.createdAt.toDate(), 'd MMM yyyy, h:mm a', locale)
+  : 'الآن'}
                                 </TableCell>
                                 <TableCell className="text-center">
                                     <Dialog>
