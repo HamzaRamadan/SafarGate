@@ -62,6 +62,7 @@ import { CITIES, getCityName } from '@/lib/constants';
 import { combineDateAndTime } from '@/lib/formatters';
 import { useCountryPricing } from '@/hooks/use-country-pricing';
 import { useLocale } from 'next-intl';
+
 // --- Zod Schema Definitions ---
 const addTripSchema = z.object({
   origin: z.string().min(1, 'مدينة الانطلاق مطلوبة'),
@@ -75,7 +76,7 @@ const addTripSchema = z.object({
   price: z.coerce.number().positive('السعر يجب أن يكون رقماً موجباً'),
   currency: z.string().min(1, "العملة مطلوبة").max(10, "رمز العملة طويل جداً"),
   availableSeats: z.coerce.number().int().min(1, 'يجب توفر مقعد واحد على الأقل'),
-  depositPercentage: z.coerce.number().min(0, "النسبة لا يمكن أن تكون سالبة"), // Free Market: No Max Limit
+  depositPercentage: z.coerce.number().min(0, "النسبة لا يمكن أن تكون سالبة"),
   estimatedDurationHours: z.coerce.number().positive('مدة الرحلة التقريبية بالساعات إلزامية لتفعيل نظام التقييم.'),
   conditions: z.string().max(200, 'الشروط يجب ألا تتجاوز 200 حرف').optional(),
 });
@@ -93,10 +94,11 @@ export function AddTripDialog({ isOpen, onOpenChange }: AddTripDialogProps) {
   const { user } = useUser();
   const { profile } = useUserProfile();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const locale = useLocale();
   
   const [originCountry, setOriginCountry] = useState('');
   const [destinationCountry, setDestinationCountry] = useState('');
-const locale = useLocale();
+
   const form = useForm<AddTripFormValues>({
     resolver: zodResolver(addTripSchema),
     defaultValues: {
@@ -114,25 +116,20 @@ const locale = useLocale();
     }
   });
 
-  // [SC-216] Injected: Carrier Sovereignty Currency Lock
   const countryCodeMap: { [key: string]: string } = {
       jordan: 'JO', lebanon: 'LB', ksa: 'SA', syria: 'SY', iraq: 'IQ',
       kuwait: 'KW', bahrain: 'BH', qatar: 'QA', uae: 'AE', oman: 'OM',
       yemen: 'YE', iran: 'IR', turkey: 'TR',
   };
-  // The currency is now tied to the CARRIER's home country (from their profile jurisdiction), not the trip's origin.
   const carrierCountryCode = (profile?.jurisdiction?.origin && countryCodeMap[profile.jurisdiction.origin]) || 'JO';
   const { rule: pricingRule } = useCountryPricing(carrierCountryCode);
 
   useEffect(() => {
-    // This effect runs when the dialog opens (profile becomes available) or if the pricing rule loads.
-    // It sets the currency based on the carrier's permanent jurisdiction.
     if (isOpen && pricingRule) {
       form.setValue('currency', pricingRule.currency, { shouldValidate: true });
     }
   }, [isOpen, pricingRule, form, profile]);
 
-  // [SC-133 FIX] Reactive Injection Engine
   useEffect(() => {
     if (isOpen && profile) {
       const defaultValues: Partial<AddTripFormValues> = {};
@@ -186,7 +183,6 @@ const locale = useLocale();
       return;
     }
     
-    // [SC-133 FIX] The Financial Shield
     if (data.depositPercentage > 0 && (!profile.paymentInformation || profile.paymentInformation.trim().length < 5)) {
         toast({
             variant: "destructive",
@@ -270,9 +266,7 @@ const locale = useLocale();
                                       <SelectTrigger className="bg-background"><SelectValue placeholder="اختر مدينة الانطلاق" /></SelectTrigger>
                                       <SelectContent>
                                       {originCountry && CITIES[originCountry as keyof typeof CITIES]?.cities.map(cityKey => (
-                                          <SelectItem key={cityKey} value={cityKey}>
-  {getCityName(cityKey, locale)}
-</SelectItem>
+                                          <SelectItem key={cityKey} value={cityKey}>{getCityName(cityKey, locale)}</SelectItem>
                                       ))}
                                       </SelectContent>
                                   </Select>
@@ -298,9 +292,7 @@ const locale = useLocale();
                                       <SelectTrigger className="bg-background"><SelectValue placeholder="اختر مدينة الوصول" /></SelectTrigger>
                                       <SelectContent>
                                       {destinationCountry && CITIES[destinationCountry as keyof typeof CITIES]?.cities.map(cityKey => (
-                                          <SelectItem key={cityKey} value={cityKey}>
-  {getCityName(cityKey, locale)}
-</SelectItem>
+                                          <SelectItem key={cityKey} value={cityKey}>{getCityName(cityKey, locale)}</SelectItem>
                                       ))}
                                       </SelectContent>
                                   </Select>
