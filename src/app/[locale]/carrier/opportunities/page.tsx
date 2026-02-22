@@ -18,10 +18,11 @@ import { useOfferDialog } from '@/hooks/use-offer-dialog';
 import { getCityName } from '@/lib/constants';
 import { RequestCard } from '@/components/carrier/request-card';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 export default function OpportunitiesPage() {
   const t = useTranslations('opportunities');
+  const locale = useLocale();
   const { user } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
@@ -109,7 +110,7 @@ export default function OpportunitiesPage() {
                   <div>
                       <h3 className="font-bold text-blue-800">{t('activeTripModeTitle')}</h3>
                       <p className="text-sm text-blue-600">
-                          {t.rich('activeTripModeDescription', { city: getCityName(activeTrip.destination) })}
+                          {t.rich('activeTripModeDescription', { city: getCityName(activeTrip.destination, locale) })}
                       </p>
                   </div>
               </div>
@@ -123,7 +124,7 @@ export default function OpportunitiesPage() {
               ) : (
                   <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                       <Ban className="h-12 w-12 mb-2 opacity-20" />
-                      <p>{t('noReturnRequests', { city: getCityName(activeTrip.destination) })}</p>
+                      <p>{t('noReturnRequests', { city: getCityName(activeTrip.destination, locale) })}</p>
                   </div>
               )}
               
@@ -151,7 +152,7 @@ export default function OpportunitiesPage() {
                 {t('opportunitiesMarketTitle')}
             </h1>
             <p className="text-xs text-muted-foreground">
-                {t.rich('opportunitiesMarketSubtitle', { origin: getCityName(profile.jurisdiction?.origin || ''), destination: getCityName(profile.jurisdiction?.destination || '') })}
+                {t.rich('opportunitiesMarketSubtitle', { origin: getCityName(profile.jurisdiction?.origin || '', locale), destination: getCityName(profile.jurisdiction?.destination || '', locale) })}
             </p>
         </div>
       </div>
