@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useUser, useFirestore, useCollection, updateDocumentNonBlocking, useDoc } from '@/firebase';
+import { useUser, useFirestore, useCollection, updateDocumentNonBlocking } from '@/firebase';
 import { collection, query, where, limit, doc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { Link } from '@/i18n/routing';
 import { useTranslations, useLocale } from 'next-intl';
@@ -61,11 +61,15 @@ export default function CarrierDashboardPage() {
     return query(collection(firestore, 'bookings'), where('carrierId', '==', user.uid), where('status', '==', 'Pending-Carrier-Confirmation'), limit(3));
   }, [user, firestore]);
 
-  // B. Next Trip (Direct Fetch - Protocol 88 Compliant)
-  const nextTripRef = useMemo(() => {
-    if (!firestore || !userProfile?.currentActiveTripId) return null;
-    return doc(firestore, 'trips', userProfile.currentActiveTripId);
-  }, [firestore, userProfile]);
+  // B. Next Trip - جلب مباشر بدون الاعتماد على currentActiveTripId
+  const nextTripQuery = useMemo(() => {
+    if (!firestore || !user?.uid) return null;
+    return query(
+      collection(firestore, 'trips'),
+      where('carrierId', '==', user.uid),
+      where('status', 'in', ['Planned', 'In-Transit'])
+    );
+  }, [firestore, user]);
 
   // [SC-148] C. Urgent Transfers (Emergency Radar)
   const urgentTransfersQuery = useMemo(() => {
@@ -81,7 +85,10 @@ export default function CarrierDashboardPage() {
 
   // --- Data Fetching ---
   const { data: pendingBookings, isLoading: loadingBookings } = useCollection(pendingBookingsQuery);
-  const { data: nextTrip, isLoading: loadingTrip } = useDoc<Trip>(nextTripRef);
+  const { data: nextTripsRaw, isLoading: loadingTrip } = useCollection<Trip>(nextTripQuery);
+  const nextTrip = nextTripsRaw && nextTripsRaw.length > 0
+    ? [...nextTripsRaw].sort((a, b) => new Date(a.departureDate || 0).getTime() - new Date(b.departureDate || 0).getTime())[0]
+    : null;
   const { data: urgentTransfers } = useCollection(urgentTransfersQuery); // [SC-148]
   const { data: directRequests } = useCollection(directRequestsQuery);   // [SC-148]
 

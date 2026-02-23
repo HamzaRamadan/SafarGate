@@ -17,10 +17,20 @@ import { arSA } from 'date-fns/locale';
  * @param formatString The desired format string (defaults to 'd MMMM yyyy').
  * @returns The formatted date string, or an empty string if the date is invalid.
  */
-export const formatDate = (date: Date | number | string, formatString: string = 'd MMMM yyyy', locale: string): string => {
+export const formatDate = (date: any, formatString: string = 'd MMMM yyyy', locale: string): string => {
   if (!date) return '';
   try {
-    const dateObj = new Date(date);
+    // Handle Firestore Timestamp object
+    let dateObj: Date;
+    if (typeof date?.toDate === 'function') {
+      dateObj = date.toDate();
+    } else if (typeof date?.seconds === 'number') {
+      // Firestore Timestamp plain object
+      dateObj = new Date(date.seconds * 1000);
+    } else {
+      dateObj = new Date(date);
+    }
+    if (isNaN(dateObj.getTime())) return 'تاريخ غير صالح';
     return formatFns(dateObj, formatString, { locale: arSA });
   } catch {
     return 'تاريخ غير صالح';

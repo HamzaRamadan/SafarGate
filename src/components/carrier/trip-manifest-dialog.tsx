@@ -9,7 +9,7 @@ import {
   DialogDescription
 } from '@/components/ui/dialog';
 import { useCollection, useFirestore, useUser } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 import { Loader2, User, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { Booking } from '@/lib/data';
@@ -31,8 +31,7 @@ export function TripManifestDialog({ tripId, open, onOpenChange }: TripManifestD
         collection(firestore, 'bookings'),
         where('tripId', '==', tripId),
         where('carrierId', '==', user.uid),
-        where('status', 'in', ['Confirmed', 'Completed']),
-        orderBy('createdAt', 'desc')
+        where('status', 'in', ['Confirmed', 'Completed'])
       );
   }, [open, tripId, firestore, user]);
 

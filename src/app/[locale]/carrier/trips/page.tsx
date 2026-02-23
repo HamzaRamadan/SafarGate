@@ -1,15 +1,13 @@
-
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { MyTripsList } from '@/components/carrier/my-trips-list';
 import type { Trip } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useFirestore, useDoc } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useFirestore, useUser, useCollection } from '@/firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { EditTripDialog, type EditTripFormValues } from '@/components/carrier/edit-trip-dialog';
 import { useTripActions } from '@/hooks/use-trip-actions';
-import { useUserProfile } from '@/hooks/use-user-profile';
 import { useTranslations } from 'next-intl';
 
 function LoadingState() {
@@ -25,39 +23,81 @@ function LoadingState() {
   );
 }
 
+// ====== DEBUG PANEL - احذفه بعد ما تحل المشكلة ======
+function DebugPanel({ userId, firestore }: { userId: string, firestore: any }) {
+  const [info, setInfo] = useState<any>({ loading: true });
+
+  useEffect(() => {
+    if (!firestore || !userId) return;
+    async function run() {
+      const results: any = { userId };
+      try {
+        // 1. كل رحلاتي بدون فلتر
+        const allQ = query(collection(firestore, 'trips'), where('carrierId', '==', userId));
+        const allSnap = await getDocs(allQ);
+        results.allTrips = allSnap.docs.map(d => ({ id: d.id, status: d.data().status, carrierId: d.data().carrierId }));
+      } catch(e: any) { results.allTripsError = e.message; }
+
+      try {
+        // 2. بفلتر status
+        const filtQ = query(collection(firestore, 'trips'), where('carrierId', '==', userId), where('status', 'in', ['Planned', 'In-Transit']));
+        const filtSnap = await getDocs(filtQ);
+        results.filteredTrips = filtSnap.docs.map(d => ({ id: d.id, status: d.data().status }));
+      } catch(e: any) { results.filteredError = e.message; }
+
+      setInfo({ ...results, loading: false });
+    }
+    run();
+  }, [firestore, userId]);
+
+  if (info.loading) return <div className="p-3 bg-yellow-50 border border-yellow-300 rounded text-xs">جاري الفحص...</div>;
+
+  return (
+    <div className="p-3 bg-yellow-50 border-2 border-yellow-400 rounded-lg text-xs font-mono space-y-2 mb-4">
+      <p className="font-bold text-yellow-800">🔍 DEBUG PANEL (احذفه بعد الحل)</p>
+      <p><b>User ID:</b> {info.userId}</p>
+      <p><b>كل رحلاتي (بدون فلتر):</b> {info.allTripsError ? <span className="text-red-600">خطأ: {info.allTripsError}</span> : JSON.stringify(info.allTrips)}</p>
+      <p><b>بعد فلتر Planned/In-Transit:</b> {info.filteredError ? <span className="text-red-600">خطأ: {info.filteredError}</span> : JSON.stringify(info.filteredTrips)}</p>
+    </div>
+  );
+}
+// ====================================================
+
 export default function CarrierTripsPage() {
   const t = useTranslations('carrierTripsPage');
-
-  const { profile, isLoading: isLoadingProfile } = useUserProfile();
+  const { user } = useUser();
   const firestore = useFirestore();
-
   const [tripToEdit, setTripToEdit] = useState<Trip | null>(null);
   const { editTrip } = useTripActions();
 
-  const activeTripRef = useMemo(() => {
-    if (!firestore || !profile?.currentActiveTripId) return null;
-    return doc(firestore, 'trips', profile.currentActiveTripId);
-  }, [firestore, profile]);
+  const activeTripsQuery = useMemo(() => {
+    if (!firestore || !user?.uid) return null;
+    return query(
+      collection(firestore, 'trips'),
+      where('carrierId', '==', user.uid),
+      where('status', 'in', ['Planned', 'In-Transit'])
+    );
+  }, [firestore, user]);
 
-  const { data: activeTrip, isLoading: isLoadingTrip } = useDoc<Trip>(activeTripRef);
+  const { data: trips, isLoading } = useCollection<Trip>(activeTripsQuery);
 
-  const handleEditTrip = (trip: Trip) => {
-    setTripToEdit(trip);
-  };
+  const sortedTrips = useMemo(() => {
+    if (!trips) return [];
+    return [...trips].sort((a, b) => {
+      const aDate = new Date(a.departureDate || 0).getTime();
+      const bDate = new Date(b.departureDate || 0).getTime();
+      return aDate - bDate;
+    });
+  }, [trips]);
+
+  const handleEditTrip = (trip: Trip) => setTripToEdit(trip);
 
   const handleConfirmEdit = async (trip: Trip, data: EditTripFormValues) => {
     const success = await editTrip(trip, data);
-    if (success) {
-      setTripToEdit(null);
-    }
+    if (success) setTripToEdit(null);
   };
 
-  const isLoading = isLoadingProfile || isLoadingTrip;
-  const tripsToShow = activeTrip ? [activeTrip] : [];
-
-  if (isLoading) {
-    return <LoadingState />;
-  }
+  if (isLoading) return <LoadingState />;
 
   return (
     <>
@@ -71,9 +111,12 @@ export default function CarrierTripsPage() {
           </p>
         </header>
 
+        {/* DEBUG - احذفه بعد الحل */}
+        {user && firestore && <DebugPanel userId={user.uid} firestore={firestore} />}
+
         <main className="space-y-8">
           <MyTripsList
-            trips={tripsToShow}
+            trips={sortedTrips}
             isLoading={isLoading}
             onEdit={handleEditTrip}
           />

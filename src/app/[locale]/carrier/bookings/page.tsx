@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { useUser, useFirestore, useCollection, useDoc } from '@/firebase';
-import { collection, query, where, orderBy, doc, updateDoc, serverTimestamp, arrayUnion, writeBatch, getDocs } from 'firebase/firestore';
+import { collection, query, where, doc, updateDoc, serverTimestamp, arrayUnion, writeBatch, getDocs } from 'firebase/firestore';
 import { BookingActionCard } from '@/components/carrier/booking-action-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Inbox, ArrowRightLeft, Zap, Check } from 'lucide-react';
@@ -68,8 +68,7 @@ export default function BookingRequestsPage() {
     return query(
       collection(firestore, 'bookings'),
       where('carrierId', '==', user.uid),
-      where('status', '==', 'Pending-Carrier-Confirmation'),
-      orderBy('createdAt', 'desc')
+      where('status', '==', 'Pending-Carrier-Confirmation')
     );
   }, [user, firestore]);
 
@@ -79,8 +78,7 @@ export default function BookingRequestsPage() {
       collection(firestore, 'trips'),
       where('targetCarrierId', '==', user.uid),
       where('requestType', '==', 'Direct'),
-      where('status', '==', 'Awaiting-Offers'),
-      orderBy('createdAt', 'desc')
+      where('status', '==', 'Awaiting-Offers')
     );
   }, [user, firestore]);
 
@@ -89,14 +87,25 @@ export default function BookingRequestsPage() {
     return query(
       collection(firestore, 'transferRequests'),
       where('toCarrierId', '==', user.uid),
-      where('status', '==', 'pending'),
-      orderBy('createdAt', 'desc')
+      where('status', '==', 'pending')
     );
   }, [user, firestore]);
 
-  const { data: bookings, isLoading: loadBookings } = useCollection<Booking>(bookingReqQuery);
-  const { data: directTrips, isLoading: loadDirect } = useCollection<Trip>(directReqQuery);
-  const { data: transfers, isLoading: loadTransfers } = useCollection<TransferRequest>(transferReqQuery);
+  const { data: bookingsRaw, isLoading: loadBookings } = useCollection<Booking>(bookingReqQuery);
+  const { data: directTripsRaw, isLoading: loadDirect } = useCollection<Trip>(directReqQuery);
+  const { data: transfersRaw, isLoading: loadTransfers } = useCollection<TransferRequest>(transferReqQuery);
+
+  // Sort client-side (avoids need for Firestore composite indexes)
+  const sortByDate = <T extends { createdAt?: any }>(arr: T[] | null) =>
+    arr ? [...arr].sort((a, b) => {
+      const aTime = a.createdAt?.toMillis?.() ?? 0;
+      const bTime = b.createdAt?.toMillis?.() ?? 0;
+      return bTime - aTime;
+    }) : null;
+
+  const bookings = sortByDate(bookingsRaw);
+  const directTrips = sortByDate(directTripsRaw);
+  const transfers = sortByDate(transfersRaw);
 
   const isLoading = loadBookings || loadDirect || loadTransfers;
 

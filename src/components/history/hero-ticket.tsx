@@ -70,8 +70,11 @@ export const HeroTicket = ({ trip, booking, onRateTrip, onCancelBooking, onMessa
 
     const displayCarrierName = liveCarrier?.firstName || trip.carrierName;
     const isTransferred = trip.transferStatus === 'Transferred';
-    const depositAmount = (booking.totalPrice * ((trip.depositPercentage || 20) / 100));
-    const remainingAmount = booking.totalPrice - depositAmount;
+    // استخدام سعر الرحلة الحالي دايماً (مش السعر القديم من الحجز)
+    const pricePerSeat = trip.price || booking.totalPrice / (booking.seats || 1);
+    const currentTotalPrice = pricePerSeat * (booking.seats || 1);
+    const depositAmount = (currentTotalPrice * ((trip.depositPercentage || 20) / 100));
+    const remainingAmount = currentTotalPrice - depositAmount;
 
     const stateStyles = {
         scheduled: {
@@ -165,7 +168,7 @@ export const HeroTicket = ({ trip, booking, onRateTrip, onCancelBooking, onMessa
                     <div className="p-3 bg-background/50 backdrop-blur-sm rounded-lg border border-primary/20 space-y-2 shadow-sm">
                         <p className="font-bold text-xs flex items-center gap-1 text-muted-foreground"><CreditCard className="h-4 w-4 text-primary"/> التفاصيل المالية</p>
                         <div className="space-y-1 text-xs">
-                            <div className="flex justify-between"><span>السعر الإجمالي:</span> <span className="font-bold">{booking.totalPrice.toFixed(2)} {booking.currency}</span></div>
+                            <div className="flex justify-between"><span>السعر الإجمالي:</span> <span className="font-bold">{currentTotalPrice.toFixed(2)} {booking.currency}</span></div>
                             <div className="flex justify-between"><span>العربون المدفوع:</span> <span className="font-bold text-green-600">{depositAmount.toFixed(2)} {booking.currency}</span></div>
                             <div className="flex justify-between border-t border-dashed border-primary/20 mt-2 pt-2"><span>المبلغ المتبقي (للكابتن):</span> <span className="font-bold text-base">{remainingAmount.toFixed(2)} {booking.currency}</span></div>
                         </div>

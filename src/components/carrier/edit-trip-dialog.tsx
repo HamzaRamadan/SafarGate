@@ -63,7 +63,14 @@ export function EditTripDialog({ isOpen, onOpenChange, trip, onConfirm }: EditTr
       form.reset({
         price: trip.price || 0,
         availableSeats: trip.availableSeats || 0,
-        departureDate: trip.departureDate ? new Date(trip.departureDate) : new Date(),
+        departureDate: (() => {
+          if (!trip.departureDate) return new Date();
+          if (typeof (trip.departureDate as any)?.toDate === 'function') {
+            return (trip.departureDate as any).toDate();
+          }
+          const d = new Date(trip.departureDate);
+          return isNaN(d.getTime()) ? new Date() : d;
+        })(),
       });
       form.clearErrors();
     }

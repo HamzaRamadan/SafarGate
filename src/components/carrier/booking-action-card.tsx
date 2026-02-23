@@ -24,8 +24,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ChatDialog } from '@/components/chat/chat-dialog';
-import { useFunctions } from '@/firebase';
-import { httpsCallable } from 'firebase/functions';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -38,7 +36,6 @@ interface BookingActionCardProps {
 export function BookingActionCard({ booking, userProfile, onReject }: BookingActionCardProps) {
   const [loading, setLoading] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const functions = useFunctions();
   const { toast } = useToast();
 
   // [SC-197] THE GHOST PROTOCOL (Logic Injection)
@@ -56,24 +53,20 @@ export function BookingActionCard({ booking, userProfile, onReject }: BookingAct
   const remainingAmount = (booking.totalPrice - parseFloat(depositAmount)).toFixed(2);
   
   const handleAccept = async () => {
-    if (!functions) return;
     setLoading(true);
-    const acceptFn = httpsCallable(functions, 'acceptBookingSafe');
-
     try {
-      await acceptFn({ bookingId: booking.id });
+      const { getFirestore, doc, updateDoc, serverTimestamp } = await import('firebase/firestore');
+      const { getApp } = await import('firebase/app');
+      const db = getFirestore(getApp());
+      const bookingRef = doc(db, 'bookings', booking.id);
+      await updateDoc(bookingRef, { 
+        status: 'Pending-Payment', 
+        updatedAt: serverTimestamp() 
+      });
       toast({ title: 'تم قبول الرحلة بنجاح ✅', className: 'bg-green-50 text-green-800' });
-      // The UI will update automatically via the live listener
     } catch (error: any) {
-      if (error.message.includes('SUBSCRIPTION_EXPIRED')) {
-         toast({ 
-             variant: 'destructive', 
-             title: 'عفواً كابتن 🛑', 
-             description: 'انتهت باقتك واستنفذت رصيد الطوارئ. يرجى التجديد للمتابعة.' 
-         });
-      } else {
-         toast({ variant: 'destructive', title: 'خطأ', description: 'حدث خطأ أثناء المعالجة.' });
-      }
+      console.error('Accept booking error:', error);
+      toast({ variant: 'destructive', title: 'خطأ', description: 'حدث خطأ أثناء المعالجة.' });
     } finally {
       setLoading(false);
     }
@@ -198,7 +191,7 @@ export function BookingActionCard({ booking, userProfile, onReject }: BookingAct
                 </Button>
                 <Button 
                     variant="outline" 
-                    className="flex-1 border-red-200 text-red-700 hover:bg-red-50"
+                    className="flex-1 border-red-200 text-red-700 hover:bg-red-900"
                     disabled={loading}
                     onClick={handleReject}
                 >

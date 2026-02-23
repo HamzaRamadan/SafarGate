@@ -37,7 +37,6 @@ export function ChatDialog({ isOpen, onOpenChange, trip, bookingId, otherPartyNa
   const { profile } = useUserProfile();
   const firestore = useFirestore();
   const [newMessage, setNewMessage] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
   const [isSuggesting, setIsSuggesting] = useState(false);
@@ -64,16 +63,11 @@ export function ChatDialog({ isOpen, onOpenChange, trip, bookingId, otherPartyNa
   }, [firestore, chatId]);
   const { data: chatDoc } = useDoc(chatDocRef);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => scrollToBottom(), 100);
       setSuggestedReplies([]);
     }
-  }, [isOpen, messages]);
+  }, [isOpen]);
   
   useEffect(() => {
     // Automatically create the chat document if it doesn't exist for 1-on-1 chats
@@ -178,8 +172,7 @@ export function ChatDialog({ isOpen, onOpenChange, trip, bookingId, otherPartyNa
         </DialogHeader>
         
         <div className="flex-1 overflow-y-auto bg-muted/20">
-          <MessageList messages={messages || []} isLoading={isLoading} />
-          <div ref={messagesEndRef} />
+          <MessageList messages={messages || []} isLoading={isLoading} currentUserId={user?.uid || ""} />
         </div>
         
         <DialogFooter className="p-4 border-t bg-background flex-col gap-2">
@@ -253,5 +246,3 @@ export function ChatDialog({ isOpen, onOpenChange, trip, bookingId, otherPartyNa
     </Dialog>
   );
 }
-
-    

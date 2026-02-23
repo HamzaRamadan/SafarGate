@@ -344,6 +344,8 @@
     "activeTripModeTitle": "وضع رحلة العودة",
     "activeTripModeDescription": "بما أنك في رحلة نشطة إلى <city/>، يقوم النظام الآن بالبحث حصراً عن الطلبات التي تعيدك من هناك.",
     "noReturnRequests": "لا توجد طلبات عودة متاحة حالياً من <city/>.",
+    "generalMarketTitle": "سوق الطلبات",
+    "generalMarketDescription": "تصفح جميع طلبات الركاب المتاحة وقدم عروضك.",
     "opportunitiesMarketTitle": "سوق الفرص",
     "opportunitiesMarketSubtitle": "طلبات الركاب المتاحة ضمن نطاقك ({origin} - {destination})",
     "noOpportunitiesTitle": "لا توجد فرص متاحة حالياً",
