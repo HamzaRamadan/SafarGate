@@ -36,6 +36,7 @@ import { collection, query, where, doc, onSnapshot } from "firebase/firestore";
 import { Badge } from "@/components/ui/badge";
 import { CarrierMobileMenu } from "@/components/carrier/carrier-mobile-menu";
 import { CarrierBottomNav } from "@/components/carrier/carrier-bottom-nav";
+import { NotificationBell } from "@/components/notification-bell";
 import { AddTripDialog } from "./add-trip-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useUnreadChats } from "@/hooks/use-unread-chats";
@@ -157,6 +158,13 @@ export default function CarrierLayout({ children }: CarrierLayoutProps) {
     },
     {
       href: "/carrier/conditions",
+      label: t("ProfessionalConditions"),
+      icon: ListChecks,
+      exact: true,
+      count: 0,
+    },
+    {
+      href: "/carrier/Permanent",
       label: t("permanentConditions"),
       icon: ListChecks,
       exact: true,
@@ -308,25 +316,7 @@ export default function CarrierLayout({ children }: CarrierLayoutProps) {
 
               {/* Bell + Avatar on Desktop */}
               <div className="hidden sm:flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  asChild
-                  className="relative ml-1"
-                >
-                  <Link href="/chats">
-                    <Bell className="h-5 w-5" />
-                    {unreadChatsCount > 0 && (
-                      <Badge
-                        variant="destructive"
-                        className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center rounded-full p-0 text-[10px] animate-in zoom-in"
-                      >
-                        {unreadChatsCount > 9 ? "+9" : unreadChatsCount}
-                      </Badge>
-                    )}
-                    <span className="sr-only">{t("messages")}</span>
-                  </Link>
-                </Button>
+                <NotificationBell />
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -386,7 +376,7 @@ export default function CarrierLayout({ children }: CarrierLayoutProps) {
           </div>
         </header>
 
-        <main className="flex-1 container py-6 px-4 md:px-6 mb-20 md:mb-0">
+        <main className="flex-1 container py-6 px-4 md:px-6 mb-20">
           {children}
         </main>
 

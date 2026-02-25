@@ -86,9 +86,9 @@ export default function CarrierDashboardPage() {
   // --- Data Fetching ---
   const { data: pendingBookings, isLoading: loadingBookings } = useCollection(pendingBookingsQuery);
   const { data: nextTripsRaw, isLoading: loadingTrip } = useCollection<Trip>(nextTripQuery);
-  const nextTrip = nextTripsRaw && nextTripsRaw.length > 0
-    ? [...nextTripsRaw].sort((a, b) => new Date(a.departureDate || 0).getTime() - new Date(b.departureDate || 0).getTime())[0]
-    : null;
+  const upcomingTrips = nextTripsRaw
+  ? [...nextTripsRaw].sort((a, b) => new Date(a.departureDate || 0).getTime() - new Date(b.departureDate || 0).getTime())
+  : [];
   const { data: urgentTransfers } = useCollection(urgentTransfersQuery); // [SC-148]
   const { data: directRequests } = useCollection(directRequestsQuery);   // [SC-148]
 
@@ -212,12 +212,12 @@ export default function CarrierDashboardPage() {
             )}
          </section>
 
-         {isLoading ? <Skeleton className="h-48 w-full" /> : nextTrip ? (
-             <section className="space-y-3">
-                <h3 className="text-sm font-bold flex items-center gap-2"><Route className="h-4 w-4 text-blue-600"/> {t('nextTrip')}</h3>
-                <MyTripsList trips={[nextTrip]} isLoading={false} onEdit={handleEditTrip} />
-             </section>
-         ) : null}
+        {isLoading ? <Skeleton className="h-48 w-full" /> : upcomingTrips.length > 0 ? (
+    <section className="space-y-3">
+       <h3 className="text-sm font-bold flex items-center gap-2"><Route className="h-4 w-4 text-blue-600"/> {t('nextTrip')}</h3>
+       <MyTripsList trips={upcomingTrips} isLoading={false} onEdit={handleEditTrip} />
+    </section>
+) : null}
       </div>
 
       <EditTripDialog isOpen={!!tripToEdit} onOpenChange={(open) => !open && setTripToEdit(null)} trip={tripToEdit} onConfirm={handleConfirmEdit} />

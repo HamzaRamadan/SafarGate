@@ -41,9 +41,7 @@ import {
   PlaneTakeoff, 
   PlaneLanding, 
   Settings, 
-  ListChecks, 
   MapPin, 
-  Wallet, 
   Info, 
   Link as LinkIcon, 
   Calendar as CalendarIcon 
@@ -56,10 +54,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
-import { Textarea } from '@/components/ui/textarea';
 import { CITIES, getCityName } from '@/lib/constants';
 import { combineDateAndTime } from '@/lib/formatters';
-import { useCountryPricing } from '@/hooks/use-country-pricing';
 import { useLocale } from 'next-intl';
 
 const addTripSchema = z.object({
@@ -71,10 +67,7 @@ const addTripSchema = z.object({
   }),
   meetingPoint: z.string().min(3, 'نقطة التجمع مطلوبة'),
   meetingPointLink: z.string().url('الرجاء إدخال رابط خرائط جوجل صالح').optional().or(z.literal('')),
-  price: z.coerce.number().positive('السعر يجب أن يكون رقماً موجباً'),
-  currency: z.string().min(1, "العملة مطلوبة").max(10, "رمز العملة طويل جداً"),
   availableSeats: z.coerce.number().int().min(1, 'يجب توفر مقعد واحد على الأقل'),
-  depositPercentage: z.coerce.number().min(0, "النسبة لا يمكن أن تكون سالبة"),
   estimatedDurationHours: z.coerce.number().positive('مدة الرحلة التقريبية بالساعات إلزامية لتفعيل نظام التقييم.'),
   conditions: z.string().max(200, 'الشروط يجب ألا تتجاوز 200 حرف').optional(),
 });
@@ -105,28 +98,11 @@ export function AddTripDialog({ isOpen, onOpenChange }: AddTripDialogProps) {
       departureTime: '',
       meetingPoint: '',
       meetingPointLink: '',
-      price: undefined,
       availableSeats: 4,
-      depositPercentage: 10,
       estimatedDurationHours: undefined,
       conditions: '',
-      currency: 'د.أ',
     }
   });
-
-  const countryCodeMap: { [key: string]: string } = {
-    jordan: 'JO', lebanon: 'LB', ksa: 'SA', syria: 'SY', iraq: 'IQ',
-    kuwait: 'KW', bahrain: 'BH', qatar: 'QA', uae: 'AE', oman: 'OM',
-    yemen: 'YE', iran: 'IR', turkey: 'TR',
-  };
-  const carrierCountryCode = (profile?.jurisdiction?.origin && countryCodeMap[profile.jurisdiction.origin]) || 'JO';
-  const { rule: pricingRule } = useCountryPricing(carrierCountryCode);
-
-  useEffect(() => {
-    if (isOpen && pricingRule) {
-      form.setValue('currency', pricingRule.currency, { shouldValidate: true });
-    }
-  }, [isOpen, pricingRule, form, profile]);
 
   useEffect(() => {
     if (isOpen && profile) {
@@ -153,35 +129,38 @@ export function AddTripDialog({ isOpen, onOpenChange }: AddTripDialogProps) {
       form.reset({
         origin: '',
         destination: '',
-        price: undefined,
         estimatedDurationHours: undefined,
         departureTime: '',
         meetingPoint: '',
         meetingPointLink: '',
-        depositPercentage: 10,
-        currency: 'د.أ',
         ...defaultValues,
       });
     }
   }, [isOpen, profile, form]);
 
   const conditionsValue = form.watch('conditions');
-  const priceValue = form.watch('price');
-  const depositPercentageValue = form.watch('depositPercentage');
-
-  const depositAmount = useMemo(() => {
-    const price = priceValue || 0;
-    const percentage = depositPercentageValue || 0;
-    return (price * (percentage / 100)).toFixed(2);
-  }, [priceValue, depositPercentageValue]);
 
   const onSubmit = async (data: AddTripFormValues) => {
     if (!firestore || !user || !profile) {
       toast({ variant: 'destructive', title: 'خطأ', description: 'يجب أن تكون مسجلاً لإنشاء رحلة.' });
       return;
     }
+
+    // جيب السعر والعربون والعملة من الشروط الدائمة
+    const price = profile.price;
+    const currency = profile.currency || 'د.أ';
+    const depositPercentage = profile.depositPercentage ?? 0;
+
+    if (!price || price <= 0) {
+      toast({
+        variant: "destructive",
+        title: "السعر غير محدد",
+        description: "يجب تحديد سعر المقعد في صفحة 'الشروط الدائمة' قبل نشر الرحلة.",
+      });
+      return;
+    }
     
-    if (data.depositPercentage > 0 && (!profile.paymentInformation || profile.paymentInformation.trim().length < 5)) {
+    if (depositPercentage > 0 && (!profile.paymentInformation || profile.paymentInformation.trim().length < 5)) {
       toast({
         variant: "destructive",
         title: "بيانات الدفع ناقصة",
@@ -209,6 +188,10 @@ export function AddTripDialog({ isOpen, onOpenChange }: AddTripDialogProps) {
         status: 'Planned' as const,
         bagsPerSeat: profile.bagsPerSeat,
         numberOfStops: profile.numberOfStops,
+        // من الشروط الدائمة
+        price,
+        currency,
+        depositPercentage,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
@@ -241,7 +224,7 @@ export function AddTripDialog({ isOpen, onOpenChange }: AddTripDialogProps) {
             
             <div className='p-2 bg-blue-950/50 border border-blue-800 rounded-lg text-blue-300 text-xs flex items-center gap-2'>
               <Info className='h-4 w-4'/>
-              <span>يتم تعبئة بعض الحقول تلقائياً من "الشروط الدائمة" الخاصة بك.</span>
+              <span>يتم تعبئة بعض الحقول تلقائياً من "الشروط الدائمة" الخاصة بك (السعر، العربون، العملة).</span>
             </div>
             
             <Card className="bg-muted/30 border-accent/20">
@@ -370,80 +353,18 @@ export function AddTripDialog({ isOpen, onOpenChange }: AddTripDialogProps) {
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
-            
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="financials" className="border rounded-lg bg-muted/30">
-                <AccordionTrigger className="p-4 font-semibold text-sm hover:no-underline">
-                  <div className='flex items-center gap-2'>
-                    <Wallet className='h-4 w-4'/>
-                    التفاصيل المالية
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="p-4 pt-0 space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <FormField control={form.control} name="price" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>سعر المقعد</FormLabel>
-                        <FormControl><Input className="bg-card" type="number" placeholder="e.g., 50" {...field} value={field.value ?? ''} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}/>
-                    <FormField control={form.control} name="currency" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>العملة</FormLabel>
-                        <FormControl>
-                          <Input {...field} disabled className="bg-muted/50 text-muted-foreground font-mono cursor-not-allowed" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}/>
-                    <FormField control={form.control} name="depositPercentage" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>نسبة العربون</FormLabel>
-                        <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={String(field.value)}>
-                          <FormControl><SelectTrigger><SelectValue placeholder="اختر نسبة" /></SelectTrigger></FormControl>
-                          <SelectContent>{[0, 5, 10, 15, 20, 25, 30, 40, 50, 75, 100].map(p => <SelectItem key={p} value={String(p)}>{p}%</SelectItem>)}</SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}/>
-                  </div>
-                  <div className="p-2 bg-background/50 border rounded-md text-center text-sm font-bold text-primary">
-                    قيمة العربون للمقعد الواحد: {depositAmount} {form.watch('currency')}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-            
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="conditions" className="border rounded-lg bg-muted/30">
-                <AccordionTrigger className="p-4 font-semibold text-sm hover:no-underline">
-                  <div className='flex items-center gap-2'>
-                    <ListChecks className='h-4 w-4'/>
-                    الشروط والأحكام (اختياري)
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="p-4 pt-0">
-                  <FormField control={form.control} name="conditions" render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Textarea
-                          placeholder="مثال: ممنوع التدخين، حقيبة واحدة فقط لكل راكب..."
-                          className="resize-none bg-card"
-                          {...field}
-                          maxLength={200}
-                          value={field.value ?? ''}
-                        />
-                      </FormControl>
-                      <div className="text-xs text-muted-foreground text-left pt-1">
-                        {conditionsValue?.length || 0}/200
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}/>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+
+            {/* عرض ملخص السعر من الشروط الدائمة */}
+            {profile?.price && (
+              <div className='p-3 bg-green-950/40 border border-green-800 rounded-lg text-green-300 text-xs flex items-center gap-2'>
+                <Info className='h-4 w-4'/>
+                <span>
+                  سعر المقعد: <strong>{profile.price} {profile.currency || 'د.أ'}</strong>
+                  {profile.depositPercentage ? ` | العربون: ${profile.depositPercentage}%` : ''}
+                  {' '}(من الشروط الدائمة)
+                </span>
+              </div>
+            )}
             
             <DialogFooter className="gap-2 sm:gap-0 pt-4">
               <Button type="button" variant="secondary" onClick={() => onOpenChange(false)} disabled={isSubmitting}>إلغاء</Button>

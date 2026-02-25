@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Loader2, Save, ListChecks, Building2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -122,6 +121,11 @@ const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'vehicl
   };
   reader.readAsDataURL(file);
 };
+// const currentYear = new Date().getFullYear();
+// const years = Array.from(
+//   { length: currentYear - 2010 + 1 },
+//   (_, i) => String(2010 + i)
+// ).reverse();
 
   return (
     <div className="container max-w-3xl mx-auto p-4 space-y-6" dir="rtl">
@@ -144,72 +148,56 @@ const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'vehicl
               </div>
               <div className="space-y-2">
                 <Label>{t('vehicleYear')} <span className="text-red-500">*</span></Label>
-                <Input type="number" placeholder={t('placeholders.vehicleYear')} value={formData.vehicleYear} onChange={e => setFormData({...formData, vehicleYear: e.target.value})} />
+                <Input type="number"
+                 className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                placeholder={t('placeholders.vehicleYear')} value={formData.vehicleYear} onChange={e => setFormData({...formData, vehicleYear: e.target.value})} />
               </div>
+              
+{/* 
+<div className="space-y-2">
+  <Label>
+    {t('vehicleYear')} <span className="text-red-500">*</span>
+  </Label>
+
+  <Select
+    value={formData.vehicleYear}
+    onValueChange={(val) =>
+      setFormData({ ...formData, vehicleYear: val })
+    }
+  >
+<SelectTrigger className="bg-background h-10 px-3">
+      <SelectValue placeholder="اختر سنة الصنع" />
+    </SelectTrigger>
+
+    <SelectContent
+      side="bottom"
+      align="start"
+      sideOffset={4}
+      avoidCollisions={false}
+    >
+      {years.map((year) => (
+        <SelectItem key={year} value={year}>
+          {year}
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
+</div> */}
               <div className="space-y-2">
                 <Label>{t('plateNumber')} <span className="text-red-500">*</span></Label>
                 <Input placeholder={t('placeholders.plateNumber')} value={formData.plateNumber} onChange={e => setFormData({...formData, plateNumber: e.target.value})} />
               </div>
               <div className="space-y-2">
                 <Label>{t('vehicleCapacity')} <span className="text-red-500">*</span></Label>
-                <Input type="number" placeholder={t('placeholders.vehicleCapacity')} value={formData.vehicleCapacity} onChange={e => setFormData({...formData, vehicleCapacity: e.target.value})} />
+                <Input type="number" 
+                 className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                placeholder={t('placeholders.vehicleCapacity')} value={formData.vehicleCapacity} onChange={e => setFormData({...formData, vehicleCapacity: e.target.value})} />
+            
               </div>
             </div>
           </Card>
 
-{/* Vehicle & Plate Upload Section */}
-<Card className="bg-muted/30 p-4 space-y-4">
-  <h4 className="font-semibold text-sm">{t('placeholders.vehicleAndPlateImages')}</h4>
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-    {/* Vehicle Image Upload */}
-    <div className="flex flex-col items-center gap-2">
-      <Label>{t('placeholders.vehicleImage')}</Label>
-      <div className={`relative w-full h-48 border-2 border-dashed rounded-xl flex items-center justify-center overflow-hidden 
-        ${vehicleImagePreview ? 'bg-gray-50' : 'bg-[#321118]'} text-gray-300`}>
-        {vehicleImagePreview ? (
-          <img
-            src={vehicleImagePreview}
-            alt={t('placeholders.vehicleImagePreviewAlt')}
-            className="object-cover w-full h-full"
-          />
-        ) : (
-          <span className="text-gray-300 text-sm">{t('placeholders.vehicleImagePlaceholder')}</span>
-        )}
-        <input
-          type="file"
-          accept="image/*"
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          onChange={(e) => handleImageChange(e, 'vehicle')}
-        />
-      </div>
-    </div>
-
-    {/* Plate Image Upload */}
-    <div className="flex flex-col items-center gap-2">
-      <Label>{t('placeholders.plateImage')}</Label>
-      <div className={`relative w-full h-48 border-2 border-dashed rounded-xl flex items-center justify-center overflow-hidden 
-        ${plateImagePreview ? 'bg-gray-50' : 'bg-[#321118]'} text-gray-300`}>
-        {plateImagePreview ? (
-          <img
-            src={plateImagePreview}
-            alt={t('placeholders.plateImagePreviewAlt')}
-            className="object-cover w-full h-full"
-          />
-        ) : (
-          <span className="text-gray-300 text-sm">{t('placeholders.plateImagePlaceholder')}</span>
-        )}
-        <input
-          type="file"
-          accept="image/*"
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          onChange={(e) => handleImageChange(e, 'plate')}
-        />
-      </div>
-    </div>
-
-  </div>
-</Card>
 
 
 
@@ -269,40 +257,7 @@ const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'vehicl
             </div>
           </Card>
 
-          {/* Permanent Operational Terms */}
-          <Card className="bg-muted/30 p-4 space-y-4">
-            <h4 className="font-semibold text-sm">{t('permanentConditions')}</h4>
-            <div className="space-y-2">
-              <Label>{t('paymentInfo')}</Label>
-              <Textarea placeholder={t('placeholders.paymentInfo')} value={formData.paymentInformation} onChange={e => setFormData({...formData, paymentInformation: e.target.value})} rows={3} />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>{t('bagsPerSeat')}</Label>
-                <Select value={formData.bagsPerSeat} onValueChange={val => setFormData({...formData, bagsPerSeat: val})}>
-                  <SelectTrigger><SelectValue placeholder="اختر العدد" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">0</SelectItem>
-                    <SelectItem value="1">1</SelectItem>
-                    <SelectItem value="2">2</SelectItem>
-                    <SelectItem value="3">3</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>{t('numberOfStops')}</Label>
-                <Select value={formData.numberOfStops} onValueChange={val => setFormData({...formData, numberOfStops: val})}>
-                  <SelectTrigger><SelectValue placeholder="اختر العدد" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">0</SelectItem>
-                    <SelectItem value="1">1</SelectItem>
-                    <SelectItem value="2">2</SelectItem>
-                    <SelectItem value="3">3</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </Card>
+         
 
           <Button className="w-full mt-6" onClick={handleSave} disabled={isSaving}>
             {isSaving ? <Loader2 className="animate-spin ml-2" /> : <Save className="ml-2 h-4 w-4" />}

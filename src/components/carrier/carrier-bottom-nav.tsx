@@ -27,7 +27,7 @@ export function CarrierBottomNav({ onAddTripClick, navLinks }: CarrierBottomNavP
 
   return (
     <div className="carrier-bottom-nav">
-      <div className="relative h-full">
+      <div className="relative h-full max-w-2xl mx-auto md:max-w-3xl">
         <div className="absolute -top-9 left-1/2 -translate-x-1/2 z-50 filter drop-shadow-xl">
           <Button size="icon" id="new-trip-button" className="h-16 w-16 rounded-full bg-turquoise text-black border-4 border-background hover:bg-turquoise/90 transition-transform active:scale-95" onClick={onAddTripClick}>
             <PlusCircle className="h-8 w-8" />

@@ -452,6 +452,8 @@ export function AddTripDialog({ isOpen, onOpenChange }: AddTripDialogProps) {
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
+
+            
             
             <DialogFooter className="gap-2 sm:gap-0 pt-4">
               <Button type="button" variant="secondary" onClick={() => onOpenChange(false)} disabled={isSubmitting}>إلغاء</Button>

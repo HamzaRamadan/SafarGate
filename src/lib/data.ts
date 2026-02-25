@@ -22,6 +22,12 @@ export type PassengerDetails = {
 
 // [SC-065] Unified User Profile (Merging Carrier & Traveler)
 export type UserProfile = {
+  conditions: string;
+  depositPercentage: number;
+  depositPercentage: number;
+  currency: string;
+  price: any;
+  vehicleCategory: string;
   fullName: string;
   id: string;
   firstName: string;
