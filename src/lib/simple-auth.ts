@@ -221,7 +221,12 @@ export async function initiateGoogleSignIn(auth: Auth, firestore: Firestore): Pr
         email: user.email!,
         phoneNumber: user.phoneNumber || '',
         role: 'traveler',
-        fullName: ''
+        fullName: '',
+        conditions: '',
+        price: undefined,
+        depositPercentage: 0,
+        currency: '',
+        vehicleCategory: ''
       };
       await setDoc(userRef, { ...newUserProfile, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
     }
