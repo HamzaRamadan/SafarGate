@@ -24,7 +24,6 @@ export type PassengerDetails = {
 export type UserProfile = {
   conditions: string;
   depositPercentage: number;
-  depositPercentage: number;
   currency: string;
   price: any;
   vehicleCategory: string;
