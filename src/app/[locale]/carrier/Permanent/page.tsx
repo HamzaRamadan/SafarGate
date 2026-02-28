@@ -15,6 +15,7 @@
 // import { Input } from '@/components/ui/input';
 // import { Loader2, Save, ListChecks, Wallet } from 'lucide-react';
 // import { useToast } from '@/hooks/use-toast';
+// import { CITIES } from '@/lib/constants';
 // import { useRouter } from 'next/navigation';
 // import {
 //   Accordion,
@@ -30,8 +31,6 @@
 //   FormLabel,
 //   FormMessage,
 // } from '@/components/ui/form';
-// import { useCountryPricing } from '@/hooks/use-country-pricing';
-
 // const pageSchema = z.object({
 //   price: z.coerce.number().positive('السعر يجب أن يكون رقماً موجباً').optional(),
 //   currency: z.string().default('د.أ'),
@@ -69,13 +68,20 @@
 //   const [vehicleImagePreview, setVehicleImagePreview] = useState<string | null>(null);
 //   const [plateImagePreview, setPlateImagePreview] = useState<string | null>(null);
 
-//   const countryCodeMap: { [key: string]: string } = {
-//     jordan: 'JO', lebanon: 'LB', ksa: 'SA', syria: 'SY', iraq: 'IQ',
-//     kuwait: 'KW', bahrain: 'BH', qatar: 'QA', uae: 'AE', oman: 'OM',
-//     yemen: 'YE', iran: 'IR', turkey: 'TR',
-//   };
-//   const carrierCountryCode = (profile?.jurisdiction?.origin && countryCodeMap[profile.jurisdiction.origin]) || 'JO';
-//   const { rule: pricingRule } = useCountryPricing(carrierCountryCode);
+//   const CURRENCIES = [
+//     { value: 'د.أ', label: 'دينار أردني (د.أ)' },
+//     { value: 'ل.س', label: 'ليرة سورية (ل.س)' },
+//     { value: 'ل.ل', label: 'ليرة لبنانية (ل.ل)' },
+//     { value: 'د.ع', label: 'دينار عراقي (د.ع)' },
+//     { value: 'ر.س', label: 'ريال سعودي (ر.س)' },
+//     { value: 'د.إ', label: 'درهم إماراتي (د.إ)' },
+//     { value: 'د.ك', label: 'دينار كويتي (د.ك)' },
+//     { value: 'ر.ق', label: 'ريال قطري (ر.ق)' },
+//     { value: 'ر.ع', label: 'ريال عماني (ر.ع)' },
+//     { value: 'د.ب', label: 'دينار بحريني (د.ب)' },
+//     { value: 'ل.ت', label: 'ليرة تركية (ل.ت)' },
+//     { value: 'USD', label: 'دولار أمريكي (USD)' },
+//   ];
 
 //   const form = useForm<PageFormValues>({
 //     resolver: zodResolver(pageSchema),
@@ -96,13 +102,6 @@
 //     const percentage = depositPercentageValue || 0;
 //     return (price * (percentage / 100)).toFixed(2);
 //   }, [priceValue, depositPercentageValue]);
-
-//   // تحديث العملة تلقائياً من قواعد التسعير
-//   useEffect(() => {
-//     if (pricingRule) {
-//       form.setValue('currency', pricingRule.currency, { shouldValidate: true });
-//     }
-//   }, [pricingRule, form]);
 
 //   useEffect(() => {
 //     if (profile) {
@@ -125,7 +124,7 @@
 //       // تعبئة حقول الفورم من البروفايل
 //       form.reset({
 //         price: profile.price ?? undefined,
-//         currency: profile.currency || pricingRule?.currency || 'د.أ',
+//         currency: profile.currency || 'د.أ',
 //         depositPercentage: profile.depositPercentage ?? 10,
 //         conditions: profile.conditions || '',
 //       });
@@ -227,48 +226,7 @@
 //               <Label>{t('paymentInfo')}</Label>
 //               <Textarea placeholder={t('placeholders.paymentInfo')} value={formData.paymentInformation} onChange={e => setFormData({...formData, paymentInformation: e.target.value})} rows={3} />
 //             </div>
-//             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//               <div className="space-y-2">
-//                 <Label>{t('bagsPerSeat')}</Label>
-//                 <Select value={formData.bagsPerSeat} onValueChange={val => setFormData({...formData, bagsPerSeat: val})}>
-//                   <SelectTrigger><SelectValue placeholder="اختر العدد" /></SelectTrigger>
-//                   <SelectContent>
-//                     <SelectItem value="0">0</SelectItem>
-//                     <SelectItem value="1">1</SelectItem>
-//                     <SelectItem value="2">2</SelectItem>
-//                     <SelectItem value="3">3</SelectItem>
-//                   </SelectContent>
-//                 </Select>
-//               </div>
-//               <div className="space-y-2">
-//                 <Label>{t('numberOfStops')}</Label>
-//                 <Select value={formData.numberOfStops} onValueChange={val => setFormData({...formData, numberOfStops: val})}>
-//                   <SelectTrigger><SelectValue placeholder="اختر العدد" /></SelectTrigger>
-//                   <SelectContent>
-//                     <SelectItem value="0">0</SelectItem>
-//                     <SelectItem value="1">1</SelectItem>
-//                     <SelectItem value="2">2</SelectItem>
-//                     <SelectItem value="3">3</SelectItem>
-//                   </SelectContent>
-//                 </Select>
-//               </div>
-//             </div>
-
-//             <div className="space-y-2 md:col-span-2">
-//               <Label>نوع وسيلة السفر</Label>
-//               <Select
-//                 value={formData.vehicleCategory}
-//                 onValueChange={(val) => setFormData({ ...formData, vehicleCategory: val })}
-//               >
-//                 <SelectTrigger className="bg-background">
-//                   <SelectValue placeholder="اختر النوع" />
-//                 </SelectTrigger>
-//                 <SelectContent side="bottom" avoidCollisions={false}>
-//                   <SelectItem value="bus">🚌 حافلة</SelectItem>
-//                   <SelectItem value="small">🚗 سيارة</SelectItem>
-//                 </SelectContent>
-//               </Select>
-//             </div>
+           
 //           </Card>
 
 //           {/* Financial Details */}
@@ -295,9 +253,16 @@
 //                     <FormField control={form.control} name="currency" render={({ field }) => (
 //                       <FormItem>
 //                         <FormLabel>العملة</FormLabel>
-//                         <FormControl>
-//                           <Input {...field} disabled className="bg-muted/50 text-muted-foreground font-mono cursor-not-allowed" />
-//                         </FormControl>
+//                         <Select onValueChange={field.onChange} value={field.value}>
+//                           <FormControl>
+//                             <SelectTrigger className="bg-card"><SelectValue placeholder="اختر العملة" /></SelectTrigger>
+//                           </FormControl>
+//                           <SelectContent>
+//                             {CURRENCIES.map(c => (
+//                               <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+//                             ))}
+//                           </SelectContent>
+//                         </Select>
 //                         <FormMessage />
 //                       </FormItem>
 //                     )} />
@@ -324,6 +289,34 @@
 //                 </AccordionContent>
 //               </AccordionItem>
 //             </Accordion>
+
+// <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//               <div className="space-y-2">
+//                 <Label>{t('bagsPerSeat')}</Label>
+//                 <Select value={formData.bagsPerSeat} onValueChange={val => setFormData({...formData, bagsPerSeat: val})}>
+//                   <SelectTrigger><SelectValue placeholder="اختر العدد" /></SelectTrigger>
+//                   <SelectContent>
+//                     <SelectItem value="0">0</SelectItem>
+//                     <SelectItem value="1">1</SelectItem>
+//                     <SelectItem value="2">2</SelectItem>
+//                     <SelectItem value="3">3</SelectItem>
+//                   </SelectContent>
+//                 </Select>
+//               </div>
+//               <div className="space-y-2">
+//                 <Label>{t('numberOfStops')}</Label>
+//                 <Select value={formData.numberOfStops} onValueChange={val => setFormData({...formData, numberOfStops: val})}>
+//                   <SelectTrigger><SelectValue placeholder="اختر العدد" /></SelectTrigger>
+//                   <SelectContent>
+//                     <SelectItem value="0">0</SelectItem>
+//                     <SelectItem value="1">1</SelectItem>
+//                     <SelectItem value="2">2</SelectItem>
+//                     <SelectItem value="3">3</SelectItem>
+//                   </SelectContent>
+//                 </Select>
+//               </div>
+//             </div>
+
 
 //             <Accordion type="single" collapsible className="w-full">
 //               <AccordionItem value="conditions" className="border rounded-lg bg-muted/30">
@@ -367,6 +360,7 @@
 //   );
 // }
 
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -400,6 +394,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+
 const pageSchema = z.object({
   price: z.coerce.number().positive('السعر يجب أن يكون رقماً موجباً').optional(),
   currency: z.string().default('د.أ'),
@@ -436,21 +431,6 @@ export default function CarrierPermanentPage() {
   const [plateImageFile, setPlateImageFile] = useState<File | null>(null);
   const [vehicleImagePreview, setVehicleImagePreview] = useState<string | null>(null);
   const [plateImagePreview, setPlateImagePreview] = useState<string | null>(null);
-
-  const CURRENCIES = [
-    { value: 'د.أ', label: 'دينار أردني (د.أ)' },
-    { value: 'ل.س', label: 'ليرة سورية (ل.س)' },
-    { value: 'ل.ل', label: 'ليرة لبنانية (ل.ل)' },
-    { value: 'د.ع', label: 'دينار عراقي (د.ع)' },
-    { value: 'ر.س', label: 'ريال سعودي (ر.س)' },
-    { value: 'د.إ', label: 'درهم إماراتي (د.إ)' },
-    { value: 'د.ك', label: 'دينار كويتي (د.ك)' },
-    { value: 'ر.ق', label: 'ريال قطري (ر.ق)' },
-    { value: 'ر.ع', label: 'ريال عماني (ر.ع)' },
-    { value: 'د.ب', label: 'دينار بحريني (د.ب)' },
-    { value: 'ل.ت', label: 'ليرة تركية (ل.ت)' },
-    { value: 'USD', label: 'دولار أمريكي (USD)' },
-  ];
 
   const form = useForm<PageFormValues>({
     resolver: zodResolver(pageSchema),
@@ -490,7 +470,6 @@ export default function CarrierPermanentPage() {
         vehicleCategory: profile.vehicleCategory || '',
       });
 
-      // تعبئة حقول الفورم من البروفايل
       form.reset({
         price: profile.price ?? undefined,
         currency: profile.currency || 'د.أ',
@@ -506,7 +485,6 @@ export default function CarrierPermanentPage() {
       return;
     }
 
-    // تحقق من صحة حقول الفورم
     const isFormValid = await form.trigger();
     if (!isFormValid) {
       toast({ title: 'خطأ', description: 'يرجى مراجعة البيانات المدخلة.', variant: 'destructive' });
@@ -536,7 +514,6 @@ export default function CarrierPermanentPage() {
         officeName: formData.officeName,
         officePhone: formData.officePhone,
         sidePanelNumber: formData.sidePanelNumber,
-        // ✅ حفظ السعر والعربون والعملة والشروط
         price: formValues.price ?? null,
         currency: formValues.currency,
         depositPercentage: formValues.depositPercentage,
@@ -595,48 +572,6 @@ export default function CarrierPermanentPage() {
               <Label>{t('paymentInfo')}</Label>
               <Textarea placeholder={t('placeholders.paymentInfo')} value={formData.paymentInformation} onChange={e => setFormData({...formData, paymentInformation: e.target.value})} rows={3} />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>{t('bagsPerSeat')}</Label>
-                <Select value={formData.bagsPerSeat} onValueChange={val => setFormData({...formData, bagsPerSeat: val})}>
-                  <SelectTrigger><SelectValue placeholder="اختر العدد" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">0</SelectItem>
-                    <SelectItem value="1">1</SelectItem>
-                    <SelectItem value="2">2</SelectItem>
-                    <SelectItem value="3">3</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>{t('numberOfStops')}</Label>
-                <Select value={formData.numberOfStops} onValueChange={val => setFormData({...formData, numberOfStops: val})}>
-                  <SelectTrigger><SelectValue placeholder="اختر العدد" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">0</SelectItem>
-                    <SelectItem value="1">1</SelectItem>
-                    <SelectItem value="2">2</SelectItem>
-                    <SelectItem value="3">3</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-2 md:col-span-2">
-              <Label>نوع وسيلة السفر</Label>
-              <Select
-                value={formData.vehicleCategory}
-                onValueChange={(val) => setFormData({ ...formData, vehicleCategory: val })}
-              >
-                <SelectTrigger className="bg-background">
-                  <SelectValue placeholder="اختر النوع" />
-                </SelectTrigger>
-                <SelectContent side="bottom" avoidCollisions={false}>
-                  <SelectItem value="bus">🚌 حافلة</SelectItem>
-                  <SelectItem value="small">🚗 سيارة</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </Card>
 
           {/* Financial Details */}
@@ -663,16 +598,13 @@ export default function CarrierPermanentPage() {
                     <FormField control={form.control} name="currency" render={({ field }) => (
                       <FormItem>
                         <FormLabel>العملة</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="bg-card"><SelectValue placeholder="اختر العملة" /></SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {CURRENCIES.map(c => (
-                              <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <Input
+                            className="bg-card"
+                            placeholder="مثال: دولار، €، جنيه"
+                            {...field}
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -699,6 +631,33 @@ export default function CarrierPermanentPage() {
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>{t('bagsPerSeat')}</Label>
+                <Select value={formData.bagsPerSeat} onValueChange={val => setFormData({...formData, bagsPerSeat: val})}>
+                  <SelectTrigger><SelectValue placeholder="اختر العدد" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">0</SelectItem>
+                    <SelectItem value="1">1</SelectItem>
+                    <SelectItem value="2">2</SelectItem>
+                    <SelectItem value="3">3</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>{t('numberOfStops')}</Label>
+                <Select value={formData.numberOfStops} onValueChange={val => setFormData({...formData, numberOfStops: val})}>
+                  <SelectTrigger><SelectValue placeholder="اختر العدد" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">0</SelectItem>
+                    <SelectItem value="1">1</SelectItem>
+                    <SelectItem value="2">2</SelectItem>
+                    <SelectItem value="3">3</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="conditions" className="border rounded-lg bg-muted/30">

@@ -90,8 +90,20 @@ export default function CarrierLayout({ children }: CarrierLayoutProps) {
   const { data: pendingBookings } = useCollection(pendingBookingsQuery);
   const pendingBookingsCount = pendingBookings?.length || 0;
 
+  // جلب الرحلات النشطة مباشرة من Firestore بناءً على الـ status
+  const activeTripsQuery = useMemo(() => {
+    if (!user?.uid || !firestore) return null;
+    return query(
+      collection(firestore, "trips"),
+      where("carrierId", "==", user.uid),
+      where("status", "in", ["Planned", "In-Transit"]),
+    );
+  }, [user, firestore]);
+  const { data: activeTrips } = useCollection(activeTripsQuery);
+  const hasActiveTrip = !!(activeTrips && activeTrips.length > 0);
+
   const handleAddTripClick = () => {
-    if (profile?.currentActiveTripId) {
+    if (hasActiveTrip) {
       toast({
         variant: "destructive",
         title: t("activeTrip"),
@@ -383,6 +395,7 @@ export default function CarrierLayout({ children }: CarrierLayoutProps) {
         <CarrierBottomNav
           onAddTripClick={handleAddTripClick}
           navLinks={navLinks}
+          hasActiveTrip={hasActiveTrip}
         />
       </div>
 

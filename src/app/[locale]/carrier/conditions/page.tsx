@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Loader2, Save, ListChecks, Building2 } from 'lucide-react';
+import { Loader2, Save, ListChecks, Building2, CarFront } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { CITIES } from '@/lib/constants';
 import { useRouter } from 'next/navigation';
@@ -33,14 +33,10 @@ export default function CarrierConditionsPage() {
     officeName: '',
     officePhone: '',
     sidePanelNumber: '',
+    vehicleCategory: '',
   });
 
   const [isSaving, setIsSaving] = useState(false);
-
-  const [vehicleImageFile, setVehicleImageFile] = useState<File | null>(null);
-const [plateImageFile, setPlateImageFile] = useState<File | null>(null);
-const [vehicleImagePreview, setVehicleImagePreview] = useState<string | null>(null);
-const [plateImagePreview, setPlateImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (profile) {
@@ -57,19 +53,45 @@ const [plateImagePreview, setPlateImagePreview] = useState<string | null>(null);
         officeName: profile.officeName || '',
         officePhone: profile.officePhone || '',
         sidePanelNumber: profile.sidePanelNumber || '',
+        vehicleCategory: profile.vehicleCategory || '',
       });
     }
   }, [profile]);
+
+  const getMaxCapacity = () => {
+    if (formData.vehicleCategory === 'small') return 8;
+    if (formData.vehicleCategory === 'bus') return 54;
+    return 54;
+  };
+
+  const handleCapacityChange = (val: string) => {
+    setFormData({ ...formData, vehicleCapacity: val });
+  };
+
+  const capacityError = () => {
+    const cap = Number(formData.vehicleCapacity);
+    if (!formData.vehicleCapacity || !formData.vehicleCategory) return null;
+    if (formData.vehicleCategory === 'small' && cap > 8) return 'السيارة الصغيرة لا تتجاوز 8 مقاعد';
+    if (formData.vehicleCategory === 'bus' && cap > 54) return 'الحافلة لا تتجاوز 54 مقعد';
+    if (cap < 1) return 'يجب أن يكون عدد المقاعد 1 على الأقل';
+    return null;
+  };
 
   const handleSave = async () => {
     if (!userProfileRef) {
       toast({ title: "خطأ", description: "الجلسة غير صالحة.", variant: "destructive" });
       return;
     }
+
+    if (capacityError()) {
+      toast({ title: "خطأ في البيانات", description: capacityError()!, variant: "destructive" });
+      return;
+    }
+
     setIsSaving(true);
     try {
       const capacity = Number(formData.vehicleCapacity);
-      const isBus = capacity > 7;
+      const finalCategory = formData.vehicleCategory;
 
       const payload = {
         paymentInformation: formData.paymentInformation,
@@ -79,7 +101,7 @@ const [plateImagePreview, setPlateImagePreview] = useState<string | null>(null);
         vehicleYear: formData.vehicleYear,
         plateNumber: formData.plateNumber,
         vehicleCapacity: capacity,
-        vehicleCategory: isBus ? 'bus' : 'small',
+        vehicleCategory: finalCategory,
         jurisdiction: {
           origin: formData.jurisdictionOrigin,
           destination: formData.jurisdictionDest
@@ -90,12 +112,13 @@ const [plateImagePreview, setPlateImagePreview] = useState<string | null>(null);
         updatedAt: serverTimestamp(),
         isPartial: false,
       };
+
       await updateDoc(userProfileRef, payload);
-      toast({ title: t('saveButton'), description: t('saveButton') });
+      toast({ title: t('saveButton'), description: "تم تحديث البيانات بنجاح" });
       router.push('/carrier');
     } catch (err) {
       console.error(err);
-      toast({ title: "Error", description: "Failed to save. Try again.", variant: "destructive" });
+      toast({ title: "Error", description: "فشل في الحفظ، حاول مجدداً", variant: "destructive" });
     } finally {
       setIsSaving(false);
     }
@@ -104,28 +127,6 @@ const [plateImagePreview, setPlateImagePreview] = useState<string | null>(null);
   if (isLoading) {
     return <div className="flex justify-center p-10"><Loader2 className="animate-spin" /></div>;
   }
-
-const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'vehicle' | 'plate') => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onloadend = () => {
-    if (type === 'vehicle') {
-      setVehicleImagePreview(reader.result as string);
-      setVehicleImageFile(file);
-    } else {
-      setPlateImagePreview(reader.result as string);
-      setPlateImageFile(file);
-    }
-  };
-  reader.readAsDataURL(file);
-};
-// const currentYear = new Date().getFullYear();
-// const years = Array.from(
-//   { length: currentYear - 2010 + 1 },
-//   (_, i) => String(2010 + i)
-// ).reverse();
 
   return (
     <div className="container max-w-3xl mx-auto p-4 space-y-6" dir="rtl">
@@ -138,68 +139,70 @@ const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'vehicl
           <CardDescription>{t('description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+
           {/* Vehicle Section */}
           <Card className="bg-muted/30 p-4 space-y-4">
-            <h4 className="font-semibold text-sm">{t('vehicleSection')}</h4>
+            <h4 className="font-semibold text-sm flex items-center gap-2">
+              <CarFront className="h-4 w-4" /> {t('vehicleSection')}
+            </h4>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+              <div className="space-y-2 md:col-span-2">
+                <Label>نوع وسيلة السفر <span className="text-red-500">*</span></Label>
+                <Select
+                  value={formData.vehicleCategory}
+                  onValueChange={(val) => setFormData({ ...formData, vehicleCategory: val, vehicleCapacity: '' })}
+                >
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder="اختر النوع (حافلة / سيارة)" />
+                  </SelectTrigger>
+                  <SelectContent side="bottom">
+                    <SelectItem value="bus">🚌 حافلة</SelectItem>
+                    <SelectItem value="small">🚗 سيارة صغيرة</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="space-y-2">
                 <Label>{t('vehicleType')} <span className="text-red-500">*</span></Label>
-                <Input placeholder={t('placeholders.vehicleType')} value={formData.vehicleType} onChange={e => setFormData({...formData, vehicleType: e.target.value})} />
+                <Input placeholder={t('placeholders.vehicleType')} value={formData.vehicleType} onChange={e => setFormData({ ...formData, vehicleType: e.target.value })} />
               </div>
+
               <div className="space-y-2">
                 <Label>{t('vehicleYear')} <span className="text-red-500">*</span></Label>
-                <Input type="number"
-                 className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                placeholder={t('placeholders.vehicleYear')} value={formData.vehicleYear} onChange={e => setFormData({...formData, vehicleYear: e.target.value})} />
+                <Input
+                  type="number"
+                  className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  placeholder={t('placeholders.vehicleYear')}
+                  value={formData.vehicleYear}
+                  onChange={e => setFormData({ ...formData, vehicleYear: e.target.value })}
+                />
               </div>
-              
-{/* 
-<div className="space-y-2">
-  <Label>
-    {t('vehicleYear')} <span className="text-red-500">*</span>
-  </Label>
 
-  <Select
-    value={formData.vehicleYear}
-    onValueChange={(val) =>
-      setFormData({ ...formData, vehicleYear: val })
-    }
-  >
-<SelectTrigger className="bg-background h-10 px-3">
-      <SelectValue placeholder="اختر سنة الصنع" />
-    </SelectTrigger>
-
-    <SelectContent
-      side="bottom"
-      align="start"
-      sideOffset={4}
-      avoidCollisions={false}
-    >
-      {years.map((year) => (
-        <SelectItem key={year} value={year}>
-          {year}
-        </SelectItem>
-      ))}
-    </SelectContent>
-  </Select>
-</div> */}
               <div className="space-y-2">
                 <Label>{t('plateNumber')} <span className="text-red-500">*</span></Label>
-                <Input placeholder={t('placeholders.plateNumber')} value={formData.plateNumber} onChange={e => setFormData({...formData, plateNumber: e.target.value})} />
+                <Input placeholder={t('placeholders.plateNumber')} value={formData.plateNumber} onChange={e => setFormData({ ...formData, plateNumber: e.target.value })} />
               </div>
+
               <div className="space-y-2">
                 <Label>{t('vehicleCapacity')} <span className="text-red-500">*</span></Label>
-                <Input type="number" 
-                 className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                placeholder={t('placeholders.vehicleCapacity')} value={formData.vehicleCapacity} onChange={e => setFormData({...formData, vehicleCapacity: e.target.value})} />
-            
+                <Input
+                  type="number"
+                  className={`[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${capacityError() ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+                  placeholder={formData.vehicleCategory === 'small' ? 'أقصى 8 مقاعد' : formData.vehicleCategory === 'bus' ? 'أقصى 54 مقعد' : t('placeholders.vehicleCapacity')}
+                  value={formData.vehicleCapacity}
+                  onChange={e => handleCapacityChange(e.target.value)}
+                  max={getMaxCapacity()}
+                  min={1}
+                />
+                {capacityError() && (
+                  <p className="text-red-500 text-xs font-medium">⚠️ {capacityError()}</p>
+                )}
               </div>
+
             </div>
           </Card>
-
-
-
-
 
           {/* Office Section */}
           <Card>
@@ -208,21 +211,20 @@ const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'vehicl
                 <Building2 className="h-5 w-5 text-blue-600" />
                 {t('officeSection')}
               </CardTitle>
-              <CardDescription>بيانات المكتب التابع له ورقم اللوحة الجانبية للمركبة.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>{t('officeName')}</Label>
-                  <Input placeholder={t('placeholders.officeName')} value={formData.officeName} onChange={e => setFormData({...formData, officeName: e.target.value})} />
+                  <Input placeholder={t('placeholders.officeName')} value={formData.officeName} onChange={e => setFormData({ ...formData, officeName: e.target.value })} />
                 </div>
                 <div className="space-y-2">
                   <Label>{t('officePhone')}</Label>
-                  <Input type="tel" placeholder={t('placeholders.officePhone')} value={formData.officePhone} onChange={e => setFormData({...formData, officePhone: e.target.value})} />
+                  <Input type="tel" placeholder={t('placeholders.officePhone')} value={formData.officePhone} onChange={e => setFormData({ ...formData, officePhone: e.target.value })} />
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label>{t('sidePanelNumber')}</Label>
-                  <Input placeholder={t('placeholders.sidePanelNumber')} value={formData.sidePanelNumber} onChange={e => setFormData({...formData, sidePanelNumber: e.target.value})} />
+                  <Input placeholder={t('placeholders.sidePanelNumber')} value={formData.sidePanelNumber} onChange={e => setFormData({ ...formData, sidePanelNumber: e.target.value })} />
                 </div>
               </div>
             </CardContent>
@@ -234,7 +236,7 @@ const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'vehicl
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>{t('origin')} <span className="text-red-500">*</span></Label>
-                <Select value={formData.jurisdictionOrigin} onValueChange={val => setFormData({...formData, jurisdictionOrigin: val})}>
+                <Select value={formData.jurisdictionOrigin} onValueChange={val => setFormData({ ...formData, jurisdictionOrigin: val })}>
                   <SelectTrigger><SelectValue placeholder="اختر..." /></SelectTrigger>
                   <SelectContent>
                     {Object.entries(CITIES).map(([key, { name }]) => (
@@ -245,7 +247,7 @@ const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'vehicl
               </div>
               <div className="space-y-2">
                 <Label>{t('destination')} <span className="text-red-500">*</span></Label>
-                <Select value={formData.jurisdictionDest} onValueChange={val => setFormData({...formData, jurisdictionDest: val})}>
+                <Select value={formData.jurisdictionDest} onValueChange={val => setFormData({ ...formData, jurisdictionDest: val })}>
                   <SelectTrigger><SelectValue placeholder="اختر..." /></SelectTrigger>
                   <SelectContent>
                     {Object.entries(CITIES).filter(([key]) => key !== formData.jurisdictionOrigin).map(([key, { name }]) => (
@@ -257,12 +259,11 @@ const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'vehicl
             </div>
           </Card>
 
-         
-
-          <Button className="w-full mt-6" onClick={handleSave} disabled={isSaving}>
+          <Button className="w-full mt-6" onClick={handleSave} disabled={isSaving || !!capacityError()}>
             {isSaving ? <Loader2 className="animate-spin ml-2" /> : <Save className="ml-2 h-4 w-4" />}
             {t('saveButton')}
           </Button>
+
         </CardContent>
       </Card>
     </div>

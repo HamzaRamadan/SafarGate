@@ -33,7 +33,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useUser, addDocumentNonBlocking } from '@/firebase';
 import { useUserProfile } from '@/hooks/use-user-profile';
-import { collection, serverTimestamp } from 'firebase/firestore';
+import { collection, serverTimestamp, doc, addDoc, updateDoc } from 'firebase/firestore';
 import { 
   Loader2, 
   Send, 
@@ -197,7 +197,15 @@ export function AddTripDialog({ isOpen, onOpenChange }: AddTripDialogProps) {
       };
       delete (tripData as any).departureTime;
 
-      await addDocumentNonBlocking(tripsCollection, tripData);
+      // أضف الرحلة واحصل على الـ ID الجديد
+      const newTripRef = await addDoc(tripsCollection, tripData);
+
+      // حدّث currentActiveTripId في بروفايل الناقل عشان يمنع إضافة رحلة تانية
+      const userRef = doc(firestore, 'users', user.uid);
+      await updateDoc(userRef, {
+        currentActiveTripId: newTripRef.id,
+        updatedAt: serverTimestamp(),
+      });
 
       toast({ title: 'تمت إضافة الرحلة بنجاح!', description: 'رحلتك الآن متاحة للمسافرين للحجز.' });
       onOpenChange(false);

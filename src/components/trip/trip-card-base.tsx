@@ -12,6 +12,7 @@ interface TripCardBaseProps {
   children?: React.ReactNode;
   headerAction?: React.ReactNode;
   vehicleAction?: React.ReactNode;
+  isCarrierView?: boolean;
 }
 
 export function TripCardBase({
@@ -19,6 +20,7 @@ export function TripCardBase({
   children,
   headerAction,
   vehicleAction,
+  isCarrierView = false,
 }: TripCardBaseProps) {
   const t = useTranslations("trip");
   const locale = useLocale();
@@ -81,6 +83,7 @@ export function TripCardBase({
         </div>
 
         {/* المركبة والمقاعد */}
+        {!isCarrierView && (
         <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-dashed border-muted-foreground/20">
           <div className="flex items-center gap-3">
             {vehicleAction}
@@ -115,6 +118,7 @@ export function TripCardBase({
             </p>
           </div>
         </div>
+        )}
 
         {/* تفاصيل إضافية */}
         <div className="grid grid-cols-2 gap-4 text-sm">
@@ -129,10 +133,12 @@ export function TripCardBase({
             <p className="font-semibold">{trip.depositPercentage}%</p>
           </div>
 
+          {!isCarrierView && (
           <div>
             <p className="text-xs text-muted-foreground">{t("carrier")}</p>
             <p className="font-semibold">{trip.carrierName}</p>
           </div>
+          )}
 
           <div>
             <p className="text-xs text-muted-foreground">{t("duration")}</p>

@@ -27,8 +27,7 @@ export default function CarrierProfilePage() {
   const t = useTranslations("carrierProfile");
   const { user, profile, isLoading, userProfileRef } = useUserProfile();
   const { toast } = useToast();
-const locale = useLocale();
-
+  const locale = useLocale();
   const { storage } = initializeFirebase();
 
   const [formData, setFormData] = useState({
@@ -43,63 +42,52 @@ const locale = useLocale();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  /* ========= تحميل البيانات ========= */
   useEffect(() => {
     if (profile) {
       setFormData({
-        fullName: profile.fullName || "",
-        email: profile.email || "",
+        // ✅ بيقرأ fullName أو firstName أو displayName — أيهم موجود
+        fullName: profile.fullName || profile.firstName || user?.displayName || "",
+        email: profile.email || user?.email || "",
         phoneNumber: profile.phoneNumber || user?.phoneNumber || "",
       });
-
       setImagePreview(profile.photoURL || null);
     }
   }, [profile, user]);
 
-  /* ========= Preview فوري ========= */
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setSelectedFile(file);
-
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result as string);
-    };
+    reader.onloadend = () => setImagePreview(reader.result as string);
     reader.readAsDataURL(file);
   };
 
-  /* ========= حفظ البيانات ========= */
   const handleSave = async () => {
     if (!user || !userProfileRef) return;
-
     setIsSaving(true);
-
     try {
       let photoURL = profile?.photoURL || null;
 
-      /* ===== رفع الصورة على Firebase Storage ===== */
       if (selectedFile) {
         const imageRef = ref(
           storage,
           `profile-images/${user.uid}/${Date.now()}-${selectedFile.name}`
         );
-
         await uploadBytes(imageRef, selectedFile);
         photoURL = await getDownloadURL(imageRef);
       }
 
-      /* ===== تحديث Firestore ===== */
       await updateDoc(userProfileRef, {
         ...formData,
+        // ✅ بيحفظ firstName برضو عشان باقي الـ app يشتغل صح
+        firstName: formData.fullName.split(' ')[0] || formData.fullName,
         photoURL,
         updatedAt: serverTimestamp(),
       });
 
       setSelectedFile(null);
       setImagePreview(photoURL);
-
       toast({ title: t("saveSuccess") });
     } catch (err) {
       console.error(err);
@@ -122,9 +110,7 @@ const locale = useLocale();
   }
 
   return (
-    // <div className="container max-w-2xl mx-auto p-4" dir="rtl">
     <div className="container max-w-2xl mx-auto p-4" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
-
       <Card>
         <CardHeader>
           <CardTitle>{t("profileTitle")}</CardTitle>
@@ -132,22 +118,14 @@ const locale = useLocale();
         </CardHeader>
 
         <CardContent className="space-y-6">
-          {/* Avatar */}
           <div className="relative w-fit mx-auto">
             <Avatar className="h-24 w-24 border-2 border-primary overflow-hidden">
               {imagePreview ? (
-                <img
-                  src={imagePreview}
-                  alt="profile"
-                  className="h-full w-full object-cover"
-                />
+                <img src={imagePreview} alt="profile" className="h-full w-full object-cover" />
               ) : (
-                <AvatarFallback>
-                  <User className="h-10 w-10" />
-                </AvatarFallback>
+                <AvatarFallback><User className="h-10 w-10" /></AvatarFallback>
               )}
             </Avatar>
-
             <Button
               type="button"
               size="icon"
@@ -157,55 +135,35 @@ const locale = useLocale();
             >
               <Camera className="h-4 w-4" />
             </Button>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              hidden
-              onChange={handleImageChange}
-            />
+            <input ref={fileInputRef} type="file" accept="image/*" hidden onChange={handleImageChange} />
           </div>
 
-          {/* الاسم */}
           <div className="space-y-2">
             <Label>{t("fullName")}</Label>
             <Input
               value={formData.fullName}
-              onChange={(e) =>
-                setFormData({ ...formData, fullName: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
             />
           </div>
 
-          {/* الهاتف */}
           <div className="space-y-2">
             <Label>{t("phoneNumber")}</Label>
             <Input
               value={formData.phoneNumber}
-              onChange={(e) =>
-                setFormData({ ...formData, phoneNumber: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
             />
           </div>
 
-          {/* البريد */}
           <div className="space-y-2">
             <Label>{t("email")}</Label>
             <Input
               value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             />
           </div>
 
           <Button className="w-full" onClick={handleSave} disabled={isSaving}>
-            {isSaving ? (
-              <Loader2 className="ml-2 animate-spin" />
-            ) : (
-              <Save className="ml-2 h-4 w-4" />
-            )}
+            {isSaving ? <Loader2 className="ml-2 animate-spin" /> : <Save className="ml-2 h-4 w-4" />}
             {t("saveButton")}
           </Button>
         </CardContent>
