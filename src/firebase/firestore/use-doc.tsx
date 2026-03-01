@@ -89,5 +89,6 @@ export function useDoc<T = any>(
     return () => unsubscribe();
   }, [docRef, isUserLoading]); // Re-run if the docRef changes or when auth state is resolved.
 
+  // return { data, isLoading, error };
   return { data, isLoading, error };
 }
